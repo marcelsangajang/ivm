@@ -14,7 +14,7 @@ Created on Tue Nov 27 21:19:36 2018
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
-import tkinter as tk 
+import tkinter
 
 #import gui
 
@@ -86,8 +86,6 @@ class Calculations:
             else:
                 oordeel2.append('rechte lijn ({})'.format(total_ratio))
              
-       # print('---------------')
-        #print(oordeel2)
         return oordeel1, oordeel2
     
     def surface_list(self, rc2_list):

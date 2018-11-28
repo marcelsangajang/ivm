@@ -1,19 +1,25 @@
 import matplotlib
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import numpy as np
-from matplotlib import *
-import tkinter
+from tkinter import *
 from tkinter import ttk
 import Thesis
 import math
+from matplotlib.figure import Figure
 #https://stackoverflow.com/questions/31440167/placing-plot-on-tkinter-main-window-in-python
+#https://pythonprogramming.net/how-to-embed-matplotlib-graph-tkinter-gui/
+#Drawing graphs https://www.python-course.eu/tkinter_events_binds.php
 class Gui:
     def __init__(self):
-    
-
         self.calc = Thesis.Calculations()
         self.filename = 'graph1.txt'
         self.points = self.read_graph(self.filename)
-        self.data = []
+        #Calculates all values
+        self.data = self.calc.calculate_all(self.points)
+        
+
+
+     
         """"
         self.box = Entry(window)
         self.button = Button (window, text="Show graph", command=self.plot)
@@ -39,14 +45,43 @@ class Gui:
         graph.grid(row=0, column=2, sticky=W+E+N+S)
         tabControl = ttk.Notebook(graph)
         
-        for i in range(len(titles2)):
-            tab = ttk.Frame(tabControl, borderwidth=1, relief="raised")            # Create a tab 
+        """Create tabs where graphis are shown"""
+        tabs = []
+        for i in range(len(self.data)-1):
+            tab = ttk.Frame(tabControl, borderwidth=1, relief="raised") # Create a tab 
+            #################### 
+         
+            tabs.append(tab)
+            
+            fig = Figure(figsize=(6,6))
+            a = fig.add_subplot(111)
+            temp = self.data[i]
+            temp2 = np.array(list(zip(*temp)))
+            x = temp2[0]
+            y = temp2[1]
+
+            a.plot(x, y,color='blue')
+    
+            a.set_title (titles2[i], fontsize=16)
+            a.set_ylabel("Y", fontsize=14)
+            a.set_xlabel("X", fontsize=14)
+            
+            #a.set_aspect('equal')
+            a.grid(True)
+            
+            a.axhline(y=0, color='k')
+            a.axvline(x=0, color='k')
+    
+            canvas = FigureCanvasTkAgg(fig, tabs[i])
+            canvas.get_tk_widget().grid()
+            canvas.draw()
+
+            #############
+ 
             tabControl.add(tab, text=titles2[i])      # Add the tab
         tabControl.grid()  # Pack to make visible
         
-        
-
-        
+        """Create table"""
         #Sets up title column (index)
         for i in range(height):
             text1 = 'i = ' + str(i)
@@ -71,10 +106,16 @@ class Gui:
             for j in range(height): #Rows
                 b = Label(table, text='', bg='white', borderwidth=1, relief="sunken")
                 b.grid(row=j+1, column=i+1, sticky=W+E+N+S)
+                
+        #button action
+        def clicked():
+            self.calc_all(table, tabs)
     
         #Standard buttons
-        btn = Button(window, text="Calculate all", command=self.calc_all(table), bg="cyan")
+        btn = Button(window, text="Calculate all", command=clicked, bg="cyan")
         btn.grid(column=0, row=0, sticky=N)
+        
+        self.calc_all(table, tabs)
         
 
         
@@ -129,10 +170,16 @@ class Gui:
         #Main loop
         window.mainloop()
    
-    def calc_all(self, table):       
-        print('calclullll')
-        self.data = self.calc.calculate_all(self.points)
+    def calc_all(self, table, tabs):       
+
+        
+        self.update_table(table)
+        self.update_tabs(tabs)
+    
+    def update_table(self, table):
         data = self.data
+        
+        """"""
         width = len(data)
         height = len(data[0])
     
@@ -157,6 +204,8 @@ class Gui:
                 b.grid(row=j+1, column=i+1, sticky=W+E+N+S)
                 
 
+    def update_tabs(self, tabs):
+        pass
         
     def plot (self):
         x=np.array ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
