@@ -23,11 +23,8 @@ class Calculations:
         pass
     
     def calculate_all(self, points):
-   
         filename = 'graph1.txt'
-        
-    
-        
+
         #Calculate rcs
         rc1_list = self.rc_list(points)
         rc2_list = self.rc_list(rc1_list)

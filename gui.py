@@ -1,13 +1,19 @@
 import matplotlib
 import numpy as np
 from matplotlib import *
-from tkinter import *
+import tkinter
+from tkinter import ttk
 import Thesis
 import math
 #https://stackoverflow.com/questions/31440167/placing-plot-on-tkinter-main-window-in-python
 class Gui:
     def __init__(self):
+    
 
+        self.calc = Thesis.Calculations()
+        self.filename = 'graph1.txt'
+        self.points = self.read_graph(self.filename)
+        self.data = []
         """"
         self.box = Entry(window)
         self.button = Button (window, text="Show graph", command=self.plot)
@@ -15,67 +21,62 @@ class Gui:
         self.button.pack()"""
         
     def mainloop(self):
-        #read graph from file
-        filename = 'graph1.txt'
-        points = self.read_graph(filename)
-        
-        #Window
+        #main window
         window = Tk()
+        sizex = 800
+        sizey = 600
+        window.geometry("%dx%d" % (sizex, sizey))
 
-        calc = Thesis.Calculations()
-        window.geometry('700x400')
-        data = None
-        #Labels and buttons
+        titles = ['Index', 'Coords (x, y)', 'RC1', 'RC2', 'Surface from i to i + 1']
+        titles2 = ['Graph', 'RC1', 'RC2', 'Surface from i to i + 1']
+        width = len(titles)
+        height = len(self.points)
+        
+        table = Frame(window, bg="white", borderwidth=1, relief="solid")
+        table.grid(row=0, column=1)
+        
+        graph = Frame(window, bg="white", borderwidth=1, relief="solid")
+        graph.grid(row=0, column=2, sticky=W+E+N+S)
+        tabControl = ttk.Notebook(graph)
+        
+        for i in range(len(titles2)):
+            tab = ttk.Frame(tabControl, borderwidth=1, relief="raised")            # Create a tab 
+            tabControl.add(tab, text=titles2[i])      # Add the tab
+        tabControl.grid()  # Pack to make visible
+        
+        
 
         
-        def calc_all():
-            data = calc.calculate_all(points)
+        #Sets up title column (index)
+        for i in range(height):
+            text1 = 'i = ' + str(i)
+            b = Label(table, text=text1, bg='white')
+            b.grid(row=i+1, column=0, sticky=W+E+N+S)
             
-            width = len(data)
-            height = len(data[0])
+        
+        #Sets up title row
+        for i in range(width):
+            b = Label(table, text=titles[i], bg='medium spring green')
+            b.grid(row=0, column=i, sticky=W+E+N+S)
             
-
-            table = Frame(window, bg="white", borderwidth=2, relief="solid")
-            table.grid()
+        for i in range(width):
+            #setup column for x-coord
+            if i == 0:
+                b = Label(table, text='', bg='white', borderwidth=1, relief="sunken")
+                b.grid(row=1, column=i+1, sticky=W+E+N+S)
+                continue
             
-            #Sets up title column (index)
-            for i in range(height):
-                text1 = 'i = ' + str(i)
-                b = Label(table, text=text1, bg='white')
-                b.grid(row=i+1, column=0, sticky=W+E+N+S)
-                
-            titles = ['Index', 'Coords (x, y)', 'RC1', 'RC2', 'Surface from i to i + 1']
-            #Sets up title row
-            for i in range(width + 1):
-                b = Label(table, text=titles[i], bg='medium spring green', )
-                b.grid(row=0, column=i, sticky=W+E+N+S)
-                
-            for i in range(width):
-                height = len(data[i])
-                #setup column for x-coord
-                if i == 0:
-                    for j in range(height): #Rows
-                        x = round(data[i][j][0], 3)
-                        y = round(data[i][j][1], 3)
-                        text1 = '(' + repr(x) + ', ' + repr(y) + ')'
-                        b = Label(table, text=text1, bg='white', borderwidth=1, relief="sunken")
-                        b.grid(row=j+1, column=i+1, sticky=W+E+N+S)
-                        
-                    continue
-                
-                #setup columns for resulting data
+            #setup columns for resulting data
  
-                for j in range(height): #Rows
-                    y = round(data[i][j][1], 3)
-                    b = Label(table, text=y, bg='white', borderwidth=1, relief="sunken")
-                    b.grid(row=j+1, column=i+1, sticky=W+E+N+S)
-                    
-            print(data[0])
-        
+            for j in range(height): #Rows
+                b = Label(table, text='', bg='white', borderwidth=1, relief="sunken")
+                b.grid(row=j+1, column=i+1, sticky=W+E+N+S)
+    
         #Standard buttons
-        btn = Button(window, text="Calculate all", command=calc_all)
-        btn.grid(column=2, row=0)
+        btn = Button(window, text="Calculate all", command=self.calc_all(table), bg="cyan")
+        btn.grid(column=0, row=0, sticky=N)
         
+
         
         """
         #ex = Example(window)
@@ -128,7 +129,35 @@ class Gui:
         #Main loop
         window.mainloop()
    
+    def calc_all(self, table):       
+        print('calclullll')
+        self.data = self.calc.calculate_all(self.points)
+        data = self.data
+        width = len(data)
+        height = len(data[0])
+    
+        for i in range(width):
+            height = len(data[i])
+            #setup column for x-coord
+            if i == 0:
+                for j in range(height): #Rows
+                    x = round(data[i][j][0], 3)
+                    y = round(data[i][j][1], 3)
+                    text1 = '(' + repr(x) + ', ' + repr(y) + ')'
+                    b = Label(table, text=text1, bg='white', borderwidth=1, relief="sunken")
+                    b.grid(row=j+1, column=i+1, sticky=W+E+N+S)
+                    
+                continue
+            
+            #setup columns for resulting data
+ 
+            for j in range(height): #Rows
+                y = round(data[i][j][1], 3)
+                b = Label(table, text=y, bg='white', borderwidth=1, relief="sunken")
+                b.grid(row=j+1, column=i+1, sticky=W+E+N+S)
+                
 
+        
     def plot (self):
         x=np.array ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
         v= np.array ([16,16.31925,17.6394,16.003,17.2861,17.3131,19.1259,18.9694,22.0003,22.81226])
