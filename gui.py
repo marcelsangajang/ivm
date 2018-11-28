@@ -2,23 +2,91 @@ import matplotlib
 import numpy as np
 from matplotlib import *
 from tkinter import *
-
-         
+import Thesis
+import math
 #https://stackoverflow.com/questions/31440167/placing-plot-on-tkinter-main-window-in-python
-class Graph:
+class Gui:
     def __init__(self):
+
         """"
-        self.window = window
         self.box = Entry(window)
         self.button = Button (window, text="Show graph", command=self.plot)
         self.box.pack ()
         self.button.pack()"""
         
     def mainloop(self):
-
+        #read graph from file
+        filename = 'graph1.txt'
+        points = self.read_graph(filename)
+        
         #Window
         window = Tk()
+
+        calc = Thesis.Calculations()
         window.geometry('700x400')
+        data = None
+        #Labels and buttons
+        lbl = Label(window, text="label text")
+        lbl.grid(column=0, row=3)
+        
+        def calc_all():
+            lbl.configure(text="Button was clicked !!")
+            data = calc.calculate_all(points)
+            
+            width = len(data)
+            height = len(data[0])
+            
+            table = Frame(window)
+            table.grid()
+            
+            #Sets up title column (index)
+            for i in range(height):
+                text1 = 'i = ' + str(i)
+                b = Label(table, text=text1)
+                b.grid(row=i+1, column=0)
+                
+            titles = ['Index', 'Coords (x, y)', 'RC1', 'RC2', 'Surface from i to i + 1']
+            #Sets up title row
+            for i in range(width + 1):
+                b = Label(table, text=titles[i])
+                b.grid(row=0, column=i)
+                
+            
+                
+            for i in range(width):
+                height = len(data[i])
+                #setup column for x-coord
+                if i == 0:
+                    for j in range(height): #Rows
+                        x = round(data[i][j][0], 3)
+                        y = round(data[i][j][1], 3)
+                        text1 = '(' + repr(x) + ', ' + repr(y) + ')'
+                        b = Label(table, text=text1)
+                        b.grid(row=j+1, column=i+1)
+                        
+                    continue
+                
+                #setup columns for resulting data
+ 
+                for j in range(height): #Rows
+                    y = round(data[i][j][1], 3)
+                    b = Label(table, text=y)
+                    b.grid(row=j+1, column=i+1)
+                    
+            print(data[0])
+        
+        #Standard buttons
+        btn = Button(window, text="Calculate all", command=calc_all)
+        btn.grid(column=2, row=0)
+        
+        #Show data in tables
+        if data != None:
+            height = len(data[0][1])
+            width = len(data)
+            for i in range(height): #Rows
+                for j in range(width): #Columns
+                    b = Entry(window, text="1")
+                    b.grid(row=i, column=j)
 
     
         """
@@ -104,3 +172,8 @@ class Graph:
                 lines.append(line) #storing everything in memory!
                 
         return lines
+
+if __name__ == '__main__':
+    g = Gui()
+    g.mainloop()
+ 

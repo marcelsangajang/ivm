@@ -3,20 +3,44 @@
 Created on Tue Nov 27 21:19:36 2018
 
 @author: Marcel
+
+#Tkinter guide: http://effbot.org/tkinterbook/canvas.htm#Tkinter.Canvas.create_polygon-method
+#Tkinter guide: https://likegeeks.com/python-gui-examples-tkinter-tutorial/#Create-your-first-GUI-application
+#Tkinter docs: https://docs.python.org/3/library/tkinter.html#tkinter-life-preserver
+# Drawing: http://zetcode.com/gui/tkinter/drawing/
+
 """
 
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import tkinter as tk 
-import gui
+
 #import gui
-#Tkinter guide: http://effbot.org/tkinterbook/canvas.htm#Tkinter.Canvas.create_polygon-method
-#Tkinter docs: https://docs.python.org/3/library/tkinter.html#tkinter-life-preserver
 
 class Calculations:
     def __init__(self):
         pass
+    
+    def calculate_all(self, points):
+   
+        filename = 'graph1.txt'
+        
+    
+        
+        #Calculate rcs
+        rc1_list = self.rc_list(points)
+        rc2_list = self.rc_list(rc1_list)
+        
+        #calculate surface
+        surfaces_list = self.surface_list(rc2_list)
+        surface_total = [sum(x) for x in zip(*surfaces_list)] #format: [total surface, total neg serface, total pos surface]
+        oordeel = self.beoordeel_grafiek(surfaces_list, surface_total[0])
+        
+        data = points, rc1_list, rc2_list, surfaces_list
+        
+        return data
+
     
     def beoordeel_grafiek(self, surfaces_list, surface_total):
         n_size = 1
@@ -24,13 +48,16 @@ class Calculations:
         
         #itereer langs de lijst met oppervlakte
         for i in range(len(surfaces_list)):
-            total = 0; neg = 0; pos = 0;
+            total = 0; neg = 0; pos = 0; counter = 2*n_size + 1
             
             #Itereer langs de neighbourhood van punt i
             for j in range(2*n_size + 1):
                 x = i - n_size - j 
 
                 if x < 0 or x > len(surfaces_list) :
+                    counter -= 1
+                    if counter == 0:
+                        counter = 1
                     continue
                 
                 #print("i = {}, x = {}".format(i,x))
@@ -62,16 +89,10 @@ class Calculations:
             else:
                 oordeel2.append('rechte lijn ({})'.format(total_ratio))
              
-        print('---------------')
-        print(oordeel2)
+       # print('---------------')
+        #print(oordeel2)
         return oordeel1, oordeel2
     
-    def beoordeel_grafiek_ratio(self, surface_list):
-        pass
-        
-            
-                
-
     def surface_list(self, rc2_list):
         surfaces = []
         for i in range(len(rc2_list) - 1):
@@ -123,31 +144,4 @@ class Calculations:
         return (b[1]-a[1])/(b[0]-a[0])
 
     
-def main():
-    filename = 'graph1.txt'
-    
-    #read graph from file
-    g = gui.Graph()
-    points = g.read_graph(filename)
-    print(points)
-    
-    #Calculate rcs
-    calc = Calculations()
-    rc1_list = calc.rc_list(points)
-    rc2_list = calc.rc_list(rc1_list)
-    
-    #calculate surface
-    surfaces = calc.surface_list(rc2_list)
-    surface_total = [sum(x) for x in zip(*surfaces)]
-    oordeel = calc.beoordeel_grafiek(surfaces, surface_total[0])
-   # print(oordeel)
-   # print(surfaces)
-    
-    #print(surface_total)
-    
-   # print('----------------')
-   # print(points)
-   # print(rc2_list)
-    
-if __name__ == '__main__':
-    main()  
+
