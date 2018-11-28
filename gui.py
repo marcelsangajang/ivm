@@ -26,32 +26,29 @@ class Gui:
         window.geometry('700x400')
         data = None
         #Labels and buttons
-        lbl = Label(window, text="label text")
-        lbl.grid(column=0, row=3)
+
         
         def calc_all():
-            lbl.configure(text="Button was clicked !!")
             data = calc.calculate_all(points)
             
             width = len(data)
             height = len(data[0])
             
-            table = Frame(window)
+
+            table = Frame(window, bg="white", borderwidth=2, relief="solid")
             table.grid()
             
             #Sets up title column (index)
             for i in range(height):
                 text1 = 'i = ' + str(i)
-                b = Label(table, text=text1)
-                b.grid(row=i+1, column=0)
+                b = Label(table, text=text1, bg='white')
+                b.grid(row=i+1, column=0, sticky=W+E+N+S)
                 
             titles = ['Index', 'Coords (x, y)', 'RC1', 'RC2', 'Surface from i to i + 1']
             #Sets up title row
             for i in range(width + 1):
-                b = Label(table, text=titles[i])
-                b.grid(row=0, column=i)
-                
-            
+                b = Label(table, text=titles[i], bg='medium spring green', )
+                b.grid(row=0, column=i, sticky=W+E+N+S)
                 
             for i in range(width):
                 height = len(data[i])
@@ -61,8 +58,8 @@ class Gui:
                         x = round(data[i][j][0], 3)
                         y = round(data[i][j][1], 3)
                         text1 = '(' + repr(x) + ', ' + repr(y) + ')'
-                        b = Label(table, text=text1)
-                        b.grid(row=j+1, column=i+1)
+                        b = Label(table, text=text1, bg='white', borderwidth=1, relief="sunken")
+                        b.grid(row=j+1, column=i+1, sticky=W+E+N+S)
                         
                     continue
                 
@@ -70,8 +67,8 @@ class Gui:
  
                 for j in range(height): #Rows
                     y = round(data[i][j][1], 3)
-                    b = Label(table, text=y)
-                    b.grid(row=j+1, column=i+1)
+                    b = Label(table, text=y, bg='white', borderwidth=1, relief="sunken")
+                    b.grid(row=j+1, column=i+1, sticky=W+E+N+S)
                     
             print(data[0])
         
@@ -79,16 +76,7 @@ class Gui:
         btn = Button(window, text="Calculate all", command=calc_all)
         btn.grid(column=2, row=0)
         
-        #Show data in tables
-        if data != None:
-            height = len(data[0][1])
-            width = len(data)
-            for i in range(height): #Rows
-                for j in range(width): #Columns
-                    b = Entry(window, text="1")
-                    b.grid(row=i, column=j)
-
-    
+        
         """
         #ex = Example(window)
         window.title("Welcome to LikeGeeks app")
