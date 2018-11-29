@@ -6,6 +6,7 @@ from tkinter import ttk
 import Thesis
 import math
 from matplotlib.figure import Figure
+import os
 #https://stackoverflow.com/questions/31440167/placing-plot-on-tkinter-main-window-in-python
 #https://pythonprogramming.net/how-to-embed-matplotlib-graph-tkinter-gui/
 #Drawing graphs https://www.python-course.eu/tkinter_events_binds.php
@@ -38,34 +39,49 @@ class Gui:
         width = len(titles)
         height = len(self.points)
         
+        """Create graph choie menu"""
+        menu = Frame(window, bg="white", borderwidth=1, relief="solid")
+        menu.grid(row=0, column=0, sticky=N)
+        
+        b = Label(menu, text="Kies een grafiek", bg='medium spring green')
+        b.grid(row=0, sticky=N+E+S+W)
+        
+        def load_graph():
+            pass
+        
+        graph_list = ['abc', 'def']
+        for i in range(len(graph_list)):
+            #Create graph choie menu
+            btn = Button(menu, text=graph_list[i], command=load_graph, bg='PaleTurquoise2')
+            btn.grid(sticky=W+E+N+S)
+            
         """Left box (table)"""
         table = Frame(window, bg="white", borderwidth=1, relief="solid")
         table.grid(row=0, column=1)
-        
         #Sets up title column (index)
         for i in range(height):
             text1 = 'i = ' + str(i)
             b = Label(table, text=text1, bg='white')
-            b.grid(row=i+1, column=0, sticky=W+E+N+S)
+            b.grid(row=i+3, column=0, sticky=W+E+N+S)
             
         
         #Sets up title row
         for i in range(width):
             b = Label(table, text=titles[i], bg='medium spring green')
-            b.grid(row=0, column=i, sticky=W+E+N+S)
+            b.grid(row=2, column=i, sticky=W+E+N+S)
             
         for i in range(width):
             #setup column for x-coord
             if i == 0:
                 b = Label(table, text='', bg='white', borderwidth=1, relief="sunken")
-                b.grid(row=1, column=i+1, sticky=W+E+N+S)
+                b.grid(row=3, column=i+1, sticky=W+E+N+S)
                 continue
             
             #setup columns for resulting data
  
             for j in range(height): #Rows
                 b = Label(table, text='', bg='white', borderwidth=1, relief="sunken")
-                b.grid(row=j+1, column=i+1, sticky=W+E+N+S)
+                b.grid(row=j+3, column=i+1, sticky=W+E+N+S)
                 
         
         """Mid box (tabs where graphis are shown)"""
@@ -167,11 +183,22 @@ class Gui:
             c.delete("all")
             points.clear()
             
+        def clicked3():
+            if os.path.exists("demofile.txt"):
+                f = open("demofile.txt", "w")
+                f.write(str(points))
+            else:
+                f = open("demofile.txt", "x")
+                f.write(str(points))
+            
         #Standard buttons
         btn = Button(box_right, text="Print", command=clicked, bg='medium spring green')
         btn.grid(sticky=E)
         
         btn = Button(box_right, text="Clear", command=clicked2, bg='medium spring green')
+        btn.grid(sticky=E)
+        
+        btn = Button(box_right, text="Save", command=clicked3, bg='medium spring green')
         btn.grid(sticky=E)
         
         self.calc_all(table, tabs)
@@ -251,7 +278,7 @@ class Gui:
                     y = round(data[i][j][1], 3)
                     text1 = '(' + repr(x) + ', ' + repr(y) + ')'
                     b = Label(table, text=text1, bg='white', borderwidth=1, relief="sunken")
-                    b.grid(row=j+1, column=i+1, sticky=W+E+N+S)
+                    b.grid(row=j+3, column=i+1, sticky=W+E+N+S)
                     
                 continue
             
@@ -260,7 +287,7 @@ class Gui:
             for j in range(height): #Rows
                 y = round(data[i][j][1], 3)
                 b = Label(table, text=y, bg='white', borderwidth=1, relief="sunken")
-                b.grid(row=j+1, column=i+1, sticky=W+E+N+S)
+                b.grid(row=j+3, column=i+1, sticky=W+E+N+S)
                 
 
     def update_tabs(self, tabs):
