@@ -29,8 +29,8 @@ class Gui:
     def mainloop(self):
         #main window
         window = Tk()
-        sizex = 800
-        sizey = 600
+        sizex = 1400
+        sizey = 1000
         window.geometry("%dx%d" % (sizex, sizey))
 
         titles = ['Index', 'Coords (x, y)', 'RC1', 'RC2', 'Surface from i to i + 1']
@@ -38,14 +38,40 @@ class Gui:
         width = len(titles)
         height = len(self.points)
         
+        """Left box (table)"""
         table = Frame(window, bg="white", borderwidth=1, relief="solid")
         table.grid(row=0, column=1)
         
-        graph = Frame(window, bg="white", borderwidth=1, relief="solid")
-        graph.grid(row=0, column=2, sticky=W+E+N+S)
-        tabControl = ttk.Notebook(graph)
+        #Sets up title column (index)
+        for i in range(height):
+            text1 = 'i = ' + str(i)
+            b = Label(table, text=text1, bg='white')
+            b.grid(row=i+1, column=0, sticky=W+E+N+S)
+            
         
-        """Create tabs where graphis are shown"""
+        #Sets up title row
+        for i in range(width):
+            b = Label(table, text=titles[i], bg='medium spring green')
+            b.grid(row=0, column=i, sticky=W+E+N+S)
+            
+        for i in range(width):
+            #setup column for x-coord
+            if i == 0:
+                b = Label(table, text='', bg='white', borderwidth=1, relief="sunken")
+                b.grid(row=1, column=i+1, sticky=W+E+N+S)
+                continue
+            
+            #setup columns for resulting data
+ 
+            for j in range(height): #Rows
+                b = Label(table, text='', bg='white', borderwidth=1, relief="sunken")
+                b.grid(row=j+1, column=i+1, sticky=W+E+N+S)
+                
+        
+        """Mid box (tabs where graphis are shown)"""
+        box_mid = Frame(window, bg="white", borderwidth=1, relief="solid")
+        box_mid.grid(row=0, column=2, sticky=W+E+N+S)
+        tabControl = ttk.Notebook(box_mid)
         tabs = []
         for i in range(len(self.data)-1):
             tab = ttk.Frame(tabControl, borderwidth=1, relief="raised") # Create a tab 
@@ -81,39 +107,72 @@ class Gui:
             tabControl.add(tab, text=titles2[i])      # Add the tab
         tabControl.grid()  # Pack to make visible
         
-        """Create table"""
-        #Sets up title column (index)
-        for i in range(height):
-            text1 = 'i = ' + str(i)
-            b = Label(table, text=text1, bg='white')
-            b.grid(row=i+1, column=0, sticky=W+E+N+S)
-            
+        """Right box (input and graph management)"""
+        box_right = Frame(window, bg="white", borderwidth=1, relief="solid")
+        box_right.grid(row=0, column=3, sticky=W+E+N+S)
+
         
-        #Sets up title row
-        for i in range(width):
-            b = Label(table, text=titles[i], bg='medium spring green')
-            b.grid(row=0, column=i, sticky=W+E+N+S)
-            
-        for i in range(width):
-            #setup column for x-coord
-            if i == 0:
-                b = Label(table, text='', bg='white', borderwidth=1, relief="sunken")
-                b.grid(row=1, column=i+1, sticky=W+E+N+S)
-                continue
-            
-            #setup columns for resulting data
- 
-            for j in range(height): #Rows
-                b = Label(table, text='', bg='white', borderwidth=1, relief="sunken")
-                b.grid(row=j+1, column=i+1, sticky=W+E+N+S)
-                
+        points = []
+        
+        spline = 0
+        
+        tag1 = "theline"
+        
+        def point(event):
+        	c.create_oval(event.x, event.y, event.x+1, event.y+1, fill="black")
+        	points.append(event.x)
+        	points.append(event.y)
+        	return points
+        
+        def canxy(event):
+        	print(event.x, event.y)
+        
+        def graph(event):
+        	global theline
+        	c.create_line(points, tags="theline")
+        	
+        
+        def toggle(event):
+        	global spline
+        	if spline == 0:
+        		c.itemconfigure(tag1, smooth=1)
+        		spline = 1
+        	elif spline == 1:
+        		c.itemconfigure(tag1, smooth=0)
+        		spline = 0
+        	return spline
+        
+        
+        c = Canvas(box_right, bg="white", width=500, height=500)
+        
+        c.configure(cursor="crosshair")
+        
+        c.grid()
+        
+        c.bind("<B1-Motion>", point)
+        
+        c.bind("<Button-3>", graph)
+        
+        c.bind("<Button-2>", toggle)
+        
+        
         #button action
         def clicked():
-            self.calc_all(table, tabs)
-    
+            #self.calc_all(table, tabs)
+            print(points)
+            
+        #button action
+        def clicked2():
+            #self.calc_all(table, tabs)
+            c.delete("all")
+            points.clear()
+            
         #Standard buttons
-        btn = Button(window, text="Calculate all", command=clicked, bg="cyan")
-        btn.grid(column=0, row=0, sticky=N)
+        btn = Button(box_right, text="Print", command=clicked, bg='medium spring green')
+        btn.grid(sticky=E)
+        
+        btn = Button(box_right, text="Clear", command=clicked2, bg='medium spring green')
+        btn.grid(sticky=E)
         
         self.calc_all(table, tabs)
         
