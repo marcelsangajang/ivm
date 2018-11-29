@@ -7,25 +7,21 @@ import Thesis
 import math
 from matplotlib.figure import Figure
 import os
+import re
 #https://stackoverflow.com/questions/31440167/placing-plot-on-tkinter-main-window-in-python
 #https://pythonprogramming.net/how-to-embed-matplotlib-graph-tkinter-gui/
 #Drawing graphs https://www.python-course.eu/tkinter_events_binds.php
 class Gui:
     def __init__(self):
         self.calc = Thesis.Calculations()
-        self.filename = 'graph1.txt'
-        self.points = self.read_graph(self.filename)
+        self.filename = '1'
+        self.filepath = './graphs/'
+        self.files = []
+        self.points = []#self.read_graph(self.filename)
         #Calculates all values
-        self.data = self.calc.calculate_all(self.points)
-        
-
-
-     
-        """"
-        self.box = Entry(window)
-        self.button = Button (window, text="Show graph", command=self.plot)
-        self.box.pack ()
-        self.button.pack()"""
+        self.data = [] #= #self.calc.calculate_all(self.points)
+        self.w_canvas = 500
+        self.h_canvas = 500
         
     def mainloop(self):
         #main window
@@ -42,22 +38,46 @@ class Gui:
         """Create graph choie menu"""
         menu = Frame(window, bg="white", borderwidth=1, relief="solid")
         menu.grid(row=0, column=0, sticky=N)
+        table = Frame(window, bg="white", borderwidth=1, relief="solid")
+        table.grid(row=0, column=1)
         
         b = Label(menu, text="Kies een grafiek", bg='medium spring green')
         b.grid(row=0, sticky=N+E+S+W)
         
-        def load_graph():
-            pass
+        def load_graph(filename):
+            print('load-graph')
+            print(filename)
+            self.filename = filename
+            self.points = self.read_graph(filename)
+            self.data = self.calc.calculate_all(self.points)
+            self.update_table(table)
+
         
-        graph_list = ['abc', 'def']
-        for i in range(len(graph_list)):
-            #Create graph choie menu
-            btn = Button(menu, text=graph_list[i], command=load_graph, bg='PaleTurquoise2')
-            btn.grid(sticky=W+E+N+S)
+        graph_list = self.files
+        def update_menu():
+            
+            files = []
+            #Find all txt files, creates a non-taken name
+            for file in os.listdir(self.filepath):
+                if file.endswith(".txt"):
+                    temp = re.sub("\D", "", file)
+                    if len(temp) > 0:
+                        files.append(int(temp))
+            #Find files
+            self.files = files
+            
+            #Create buttons
+            for i in range(len(files)):
+                #Create graph choie menu
+                btn = Button(menu, text='Graph '+str(files[i]), command=load_graph(files[i]), bg='PaleTurquoise2')
+                btn.grid(row = i, column = 0, sticky=W+E+N+S)
+            
+
+        
+        update_menu()
             
         """Left box (table)"""
-        table = Frame(window, bg="white", borderwidth=1, relief="solid")
-        table.grid(row=0, column=1)
+
         #Sets up title column (index)
         for i in range(height):
             text1 = 'i = ' + str(i)
@@ -128,7 +148,7 @@ class Gui:
         box_right.grid(row=0, column=3, sticky=W+E+N+S)
 
         
-        points = []
+        points_drawing = []
         
         spline = 0
         
@@ -136,16 +156,16 @@ class Gui:
         
         def point(event):
         	c.create_oval(event.x, event.y, event.x+1, event.y+1, fill="black")
-        	points.append(event.x)
-        	points.append(event.y)
-        	return points
+        	points_drawing.append(event.x)
+        	points_drawing.append(event.y)
+        	return points_drawing
         
         def canxy(event):
         	print(event.x, event.y)
         
         def graph(event):
         	global theline
-        	c.create_line(points, tags="theline")
+        	c.create_line(points_drawing, tags="theline")
         	
         
         def toggle(event):
@@ -159,7 +179,7 @@ class Gui:
         	return spline
         
         
-        c = Canvas(box_right, bg="white", width=500, height=500)
+        c = Canvas(box_right, bg="white", width=self.w_canvas, height=self.h_canvas)
         
         c.configure(cursor="crosshair")
         
@@ -175,22 +195,19 @@ class Gui:
         #button action
         def clicked():
             #self.calc_all(table, tabs)
-            print(points)
+            print(points_drawing)
             
         #button action
         def clicked2():
             #self.calc_all(table, tabs)
             c.delete("all")
-            points.clear()
+            points_drawing.clear()
             
+        #Stores drawing as file
         def clicked3():
-            if os.path.exists("demofile.txt"):
-                f = open("demofile.txt", "w")
-                f.write(str(points))
-            else:
-                f = open("demofile.txt", "x")
-                f.write(str(points))
-            
+            self.save_graph(points_drawing)   
+            update_menu(menu)
+                        
         #Standard buttons
         btn = Button(box_right, text="Print", command=clicked, bg='medium spring green')
         btn.grid(sticky=E)
@@ -201,64 +218,67 @@ class Gui:
         btn = Button(box_right, text="Save", command=clicked3, bg='medium spring green')
         btn.grid(sticky=E)
         
-        self.calc_all(table, tabs)
-        
-
-        
-        """
-        #ex = Example(window)
-        window.title("Welcome to LikeGeeks app")
-        window.geometry('700x400')
-          
-        #Text
-        txt = Entry(window,width=10)
-        txt.grid(column=1, row=0)
-        
-        #Combo box
-        combo = Combobox(window)
-        combo['values']= (1, 2, 3, 4, 5, "Text")
-        combo.current(1) #set the selected item
-        combo.grid(column=0, row=1)
-        
-        #Checkbox 
-        chk_state = BooleanVar() 
-        chk_state.set(True) #set check state 
-        chk = Checkbutton(window, text='Choose', var=chk_state) 
-        chk.grid(column=0, row=2)
-        
-        #Labels and buttons
-        lbl = Label(window, text="Hello")
-        lbl.grid(column=0, row=3)
-        
-        def clicked():
-            lbl.configure(text="Button was clicked !!")
-        
-        #Standard buttons
-        btn = Button(window, text="Click Me", command=clicked)
-        btn.grid(column=2, row=0)
-        
-        #Radio buttons
-        rad1 = Radiobutton(window,text='First', value=1)
-        rad2 = Radiobutton(window,text='Second', value=2)
-        rad3 = Radiobutton(window,text='Third', value=3)
-        rad1.grid(column=0, row=0)
-        rad2.grid(column=1, row=0)
-        rad3.grid(column=2, row=0)
-         
-        #Canvas
-       
-        w = Canvas(window, width=200, height=100)
-        w.grid(column=2, row=2)
-        w.create_line(0, 0, 200, 100)
-        w.create_line(0, 100, 200, 0, fill="red", dash=(4, 4))
-        w.create_rectangle(50, 25, 150, 75, fill="blue")"""
+        #self.calc_all(table, tabs)
         
         #Main loop
         window.mainloop()
    
-    def calc_all(self, table, tabs):       
-
+    def save_graph(self, points_drawing):
+        #rewrite format of the file
+        text = str(points_drawing)
+        text = re.sub('[^0-9.]', ' ', text).lstrip()
+ 
+        print('points drawing---------')
+        print(points_drawing)
+        print('text---------')
+        print(text)
         
+        files = []
+        #Find all txt files, creates a non-taken name
+        for file in os.listdir(self.filepath):
+            if file.endswith(".txt"):
+                temp = re.sub("\D", "", file)
+                if len(temp) > 0:
+                    files.append(int(temp))
+        
+        temp = text.split()
+        #Iterates though X coords (= every 2nd number in txt file)
+        string = ""  
+        i = 0
+        while i < len(temp) - 4:
+            counter = 1
+            x = float(temp[i])
+            y = float(temp[i + 1])
+            #checks right nieghbour coords if x value is same
+            j = i + 2
+            while float(temp[j]) == x:
+                y += float(temp[j + 1])
+                j += 2
+                counter += 1
+
+            if counter != 1:
+                y = self.h_canvas - y / counter
+            
+            i = j  
+            string += str(x) + ' ' + str(y) + ' '
+        
+        #Create unique name for file
+        for i in range(100):
+            duplicate = False
+            for j in range(len(files)):
+                if i == files[j]:
+                    duplicate = True
+                    break
+            
+            if duplicate == False:
+                #create file with name i
+                f = open(self.filepath + str(i) + '.txt', "x")
+                f.write(string)
+                return
+                
+        print('max limit of files is 100')
+        
+    def calc_all(self, table, tabs):               
         self.update_table(table)
         self.update_tabs(tabs)
     
@@ -316,13 +336,30 @@ class Gui:
     #https://stackoverflow.com/questions/3925614/how-do-you-read-a-file-into-a-list-in-python
     def read_graph(self, filename):
         #Sample 1 - elucidating each step but not memory efficient
+        name = self.filepath + str(filename) + '.txt'
         lines = []
-        with open(filename) as file:
-            for line in file: 
-                line = line.strip().split(' ') #or some other preprocessing
-                line = [float(line[0]), float(line[1])]
-                lines.append(line) #storing everything in memory!
-                
+
+        with open(name) as file:
+       
+            for j in file:
+  
+                temp = j.strip().split()
+       
+                for i in range(len(temp)):
+                    if i % 2 == 0:
+                        x = temp[i]
+                    elif i % 2 == 1:
+                        y = temp[i]
+                        #print('({},{})'.format(x,y))
+
+                        try:
+                            line = [float(x), float(y)]
+                            lines.append(line) #storing everything in memory!
+                        except:
+                            pass
+                            #print('error while reading file')
+     
+ 
         return lines
 
 if __name__ == '__main__':
