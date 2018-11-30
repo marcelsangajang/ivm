@@ -23,6 +23,11 @@ class Gui:
         self.w_canvas = 500
         self.h_canvas = 500
         
+        self.titles = ['Index', 'Coords (x, y)', 'RC1', 'RC2', 'Surface from i to i + 1']
+        self.table_h = 20
+        self.table_w = len(self.titles)
+        
+        
     def mainloop(self):
         #main window
         window = Tk()
@@ -33,82 +38,40 @@ class Gui:
         titles = ['Index', 'Coords (x, y)', 'RC1', 'RC2', 'Surface from i to i + 1']
         titles2 = ['Graph', 'RC1', 'RC2', 'Surface from i to i + 1']
         width = len(titles)
-        height = len(self.points)
+        height = 20#len(self.points)
         
-        """Create graph choie menu"""
+        """Frame for menu menu"""
         menu = Frame(window, bg="white", borderwidth=1, relief="solid")
         menu.grid(row=0, column=0, sticky=N)
+        
+        menu_label = Label(menu, text="Kies een grafiek", bg='medium spring green')
+        menu_label.grid(row=0, sticky=N+E+S+W)
+        menu_buttons = []
+        
+        """Frame for table"""
         table = Frame(window, bg="white", borderwidth=1, relief="solid")
         table.grid(row=0, column=1)
+        table_content = []
         
-        b = Label(menu, text="Kies een grafiek", bg='medium spring green')
-        b.grid(row=0, sticky=N+E+S+W)
-        
-        def load_graph(filename):
-            print('load-graph')
-            print(filename)
-            self.filename = filename
-            self.points = self.read_graph(filename)
-            self.data = self.calc.calculate_all(self.points)
-            self.update_table(table)
-
-        
-        graph_list = self.files
-        def update_menu():
-            
-            files = []
-            #Find all txt files, creates a non-taken name
-            for file in os.listdir(self.filepath):
-                if file.endswith(".txt"):
-                    temp = re.sub("\D", "", file)
-                    if len(temp) > 0:
-                        files.append(int(temp))
-            #Find files
-            self.files = files
-            
-            #Create buttons
-            for i in range(len(files)):
-                #Create graph choie menu
-                btn = Button(menu, text='Graph '+str(files[i]), command=load_graph(files[i]), bg='PaleTurquoise2')
-                btn.grid(row = i, column = 0, sticky=W+E+N+S)
-            
-
-        
-        update_menu()
-            
-        """Left box (table)"""
-
-        #Sets up title column (index)
-        for i in range(height):
-            text1 = 'i = ' + str(i)
-            b = Label(table, text=text1, bg='white')
-            b.grid(row=i+3, column=0, sticky=W+E+N+S)
-            
-        
-        #Sets up title row
-        for i in range(width):
-            b = Label(table, text=titles[i], bg='medium spring green')
-            b.grid(row=2, column=i, sticky=W+E+N+S)
-            
-        for i in range(width):
-            #setup column for x-coord
-            if i == 0:
-                b = Label(table, text='', bg='white', borderwidth=1, relief="sunken")
-                b.grid(row=3, column=i+1, sticky=W+E+N+S)
-                continue
-            
-            #setup columns for resulting data
- 
-            for j in range(height): #Rows
-                b = Label(table, text='', bg='white', borderwidth=1, relief="sunken")
-                b.grid(row=j+3, column=i+1, sticky=W+E+N+S)
-                
-        
-        """Mid box (tabs where graphis are shown)"""
+        """Frame for graphs (tabs where graphis are shown)"""
         box_mid = Frame(window, bg="white", borderwidth=1, relief="solid")
         box_mid.grid(row=0, column=2, sticky=W+E+N+S)
         tabControl = ttk.Notebook(box_mid)
         tabs = []
+        
+        """Frame for drawing"""
+        box_right = Frame(window, bg="white", borderwidth=1, relief="solid")
+        box_right.grid(row=0, column=3, sticky=W+E+N+S)
+
+
+        def create_window():
+            menu_buttons = self.create_menu(menu)
+            table_content = self.create_table(table)
+            #create graphs(tabs)
+            #create drawing input
+    
+        create_window()
+        """Graphs (tabs)"""
         for i in range(len(self.data)-1):
             tab = ttk.Frame(tabControl, borderwidth=1, relief="raised") # Create a tab 
             #################### 
@@ -143,11 +106,7 @@ class Gui:
             tabControl.add(tab, text=titles2[i])      # Add the tab
         tabControl.grid()  # Pack to make visible
         
-        """Right box (input and graph management)"""
-        box_right = Frame(window, bg="white", borderwidth=1, relief="solid")
-        box_right.grid(row=0, column=3, sticky=W+E+N+S)
-
-        
+        """Drawings"""        
         points_drawing = []
         
         spline = 0
@@ -206,7 +165,7 @@ class Gui:
         #Stores drawing as file
         def clicked3():
             self.save_graph(points_drawing)   
-            update_menu(menu)
+            update_menu(menu_buttons)
                         
         #Standard buttons
         btn = Button(box_right, text="Print", command=clicked, bg='medium spring green')
@@ -222,6 +181,62 @@ class Gui:
         
         #Main loop
         window.mainloop()
+        
+    def load_graph(self, filename):
+        print('load-graph')
+        print(filename)
+        self.filename = filename
+        self.points = self.read_graph(filename)
+        self.data = self.calc.calculate_all(self.points)
+        #self.update_table(table)
+        
+    def create_menu(self, master):
+        btns = []
+        files = []
+        #Find all txt files, creates a non-taken name
+        for file in os.listdir(self.filepath):
+            if file.endswith(".txt"):
+                temp = re.sub("\D", "", file)
+                if len(temp) > 0:
+                    files.append(int(temp))
+        #Find files
+        self.files = files
+        
+        #Create buttons
+        for i in range(len(files)):
+            #Create graph choie menu
+            btn = Button(master, text='Graph '+str(files[i]), command=self.load_graph(files[i]), bg='PaleTurquoise2')
+            btn.grid(sticky=W+E+N+S)
+            btns.append(btn)
+            
+        return btns
+    
+    """Table"""
+    def create_table(self, master):
+        t_content = []
+        for i in range(self.table_w):
+            t_content.append([])
+        
+        #Sets up title row
+        for i in range(self.table_w):
+            b = Label(master, text=self.titles[i], bg='medium spring green')
+            b.grid(row=2, column=i, sticky=W+E+N+S)
+            t_content[i].append(b)
+        
+        #Sets up title column (index)
+        for i in range(self.table_h):
+            text1 = 'i = ' + str(i)
+            b = Label(master, text=text1, bg='white')
+            b.grid(row=i+3, column=0, sticky=W+E+N+S)
+            t_content[0].append(b)
+            
+        for i in range(1, self.table_w):
+            for j in range(self.table_h): #Rows
+                b = Label(master, text='', bg='white', borderwidth=1, relief="sunken")
+                b.grid(row=j+3, column=i, sticky=W+E+N+S)
+                t_content[i].append(b)
+                
+        return t_content
    
     def save_graph(self, points_drawing):
         #rewrite format of the file
