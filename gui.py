@@ -11,6 +11,7 @@ import re
 #https://stackoverflow.com/questions/31440167/placing-plot-on-tkinter-main-window-in-python
 #https://pythonprogramming.net/how-to-embed-matplotlib-graph-tkinter-gui/
 #Drawing graphs https://www.python-course.eu/tkinter_events_binds.php
+#https://gist.github.com/EugeneBakin/76c8f9bcec5b390e45df scrollframe
 class Gui:
     def __init__(self):
         self.calc = Thesis.Calculations()
@@ -23,89 +24,53 @@ class Gui:
         self.w_canvas = 500
         self.h_canvas = 500
         
-        self.titles = ['Index', 'Coords (x, y)', 'RC1', 'RC2', 'Surface from i to i + 1']
+        self.titles = ['Index', 'X', 'Y', 'RC1', 'RC2', 'Surface from i to i + 1']
+        self.titles_tabs = ['Origrinal graph', 'RC1', 'RC2']
         self.table_h = 20
         self.table_w = len(self.titles)
         
-        
-    def mainloop(self):
+     
+           
         #main window
-        window = Tk()
-        sizex = 1400
-        sizey = 1000
-        window.geometry("%dx%d" % (sizex, sizey))
+        self.window = Tk()
+        self.sizex = 1400
+        self.sizey = 1000
+        self.window.geometry("%dx%d" % (self.sizex, self.sizey))
 
-        titles = ['Index', 'Coords (x, y)', 'RC1', 'RC2', 'Surface from i to i + 1']
-        titles2 = ['Graph', 'RC1', 'RC2', 'Surface from i to i + 1']
-        width = len(titles)
-        height = 20#len(self.points)
+        self.width = len(self.titles)
+        self.height = 20#len(self.points)
         
         """Frame for menu menu"""
-        menu = Frame(window, bg="white", borderwidth=1, relief="solid")
-        menu.grid(row=0, column=0, sticky=N)
+        self.menu = Frame(self.window, bg="orchid1", borderwidth=1, relief="solid")
+        self.menu.grid(row=0, column=0, sticky=N)
         
-        menu_label = Label(menu, text="Kies een grafiek", bg='medium spring green')
-        menu_label.grid(row=0, sticky=N+E+S+W)
-        menu_buttons = []
+        self.menu_label = Label(self.menu, text="Kies een grafiek", bg='medium spring green')
+        self.menu_label.grid(row=0, sticky=N+E+S+W)
+        #self.menu_buttons = []
+        self.input = Entry(self.menu, text="")
+        self.input.grid()
+        self.input_button = Button(self.menu, text="Bereken", command=self.load_graph, bg='medium spring green')
+        self.input_button.grid(sticky=E)
         
         """Frame for table"""
-        table = Frame(window, bg="white", borderwidth=1, relief="solid")
-        table.grid(row=0, column=1)
-        table_content = []
+        self.table = Frame(self.window, bg="white", borderwidth=1, relief="solid")
+        self.table.grid(row=0, column=1)
+        self.table_content = self.create_table(self.table)
         
         """Frame for graphs (tabs where graphis are shown)"""
-        box_mid = Frame(window, bg="white", borderwidth=1, relief="solid")
-        box_mid.grid(row=0, column=2, sticky=W+E+N+S)
-        tabControl = ttk.Notebook(box_mid)
-        tabs = []
+        self.box_mid = Frame(self.window, bg="white", borderwidth=1, relief="solid")
+        self.box_mid.grid(row=0, column=2, sticky=W+E+N+S)
+        self. tab_control = ttk.Notebook(self.box_mid)
+        self.tabs = self.create_graphs(self.tab_control)
         
         """Frame for drawing"""
-        box_right = Frame(window, bg="white", borderwidth=1, relief="solid")
-        box_right.grid(row=0, column=3, sticky=W+E+N+S)
+        self.box_right = Frame(self.window, bg="white", borderwidth=1, relief="solid")
+        self.box_right.grid(row=0, column=3, sticky=W+E+N+S)
 
-
-        def create_window():
-            menu_buttons = self.create_menu(menu)
-            table_content = self.create_table(table)
-            #create graphs(tabs)
-            #create drawing input
-    
-        create_window()
-        """Graphs (tabs)"""
-        for i in range(len(self.data)-1):
-            tab = ttk.Frame(tabControl, borderwidth=1, relief="raised") # Create a tab 
-            #################### 
-         
-            tabs.append(tab)
-            
-            fig = Figure(figsize=(6,6))
-            a = fig.add_subplot(111)
-            temp = self.data[i]
-            temp2 = np.array(list(zip(*temp)))
-            x = temp2[0]
-            y = temp2[1]
-
-            a.plot(x, y,color='blue')
-    
-            a.set_title (titles2[i], fontsize=16)
-            a.set_ylabel("Y", fontsize=14)
-            a.set_xlabel("X", fontsize=14)
-            
-            #a.set_aspect('equal')
-            a.grid(True)
-            
-            a.axhline(y=0, color='k')
-            a.axvline(x=0, color='k')
-    
-            canvas = FigureCanvasTkAgg(fig, tabs[i])
-            canvas.get_tk_widget().grid()
-            canvas.draw()
-
-            #############
- 
-            tabControl.add(tab, text=titles2[i])      # Add the tab
-        tabControl.grid()  # Pack to make visible
         
+    def mainloop(self):
+
+
         """Drawings"""        
         points_drawing = []
         
@@ -138,7 +103,7 @@ class Gui:
         	return spline
         
         
-        c = Canvas(box_right, bg="white", width=self.w_canvas, height=self.h_canvas)
+        c = Canvas(self.box_right, bg="white", width=self.w_canvas, height=self.h_canvas)
         
         c.configure(cursor="crosshair")
         
@@ -165,31 +130,126 @@ class Gui:
         #Stores drawing as file
         def clicked3():
             self.save_graph(points_drawing)   
-            update_menu(menu_buttons)
+            #update_menu(menu_buttons)
                         
         #Standard buttons
-        btn = Button(box_right, text="Print", command=clicked, bg='medium spring green')
+        btn = Button(self.box_right, text="Print", command=clicked, bg='medium spring green')
         btn.grid(sticky=E)
         
-        btn = Button(box_right, text="Clear", command=clicked2, bg='medium spring green')
+        btn = Button(self.box_right, text="Clear", command=clicked2, bg='medium spring green')
         btn.grid(sticky=E)
         
-        btn = Button(box_right, text="Save", command=clicked3, bg='medium spring green')
+        btn = Button(self.box_right, text="Save", command=clicked3, bg='medium spring green')
         btn.grid(sticky=E)
         
         #self.calc_all(table, tabs)
         
         #Main loop
-        window.mainloop()
+        self.window.mainloop()
+    def create_graphs(self, tab_control):
+        """Graphs (tabs)"""
+        tabs = []
+        for i in range(len(self.titles_tabs)):
+            tab = ttk.Frame(tab_control, borderwidth=1, relief="raised") # Create a tab 
+            #################### 
+         
+            tabs.append(tab)
+            
+            fig = Figure(figsize=(6,6))
+            a = fig.add_subplot(111)
+            """if :
+                temp = self.data[i]
+                temp2 = np.array(list(zip(*temp)))
+                x = temp2[0]
+                y = temp2[1]
+            else:"""
+            x = []
+            y = []
+
+            a.plot(x, y,color='blue')
+    
+            a.set_title (self.titles_tabs[i], fontsize=16)
+            a.set_ylabel("Y", fontsize=14)
+            a.set_xlabel("X", fontsize=14)
+            
+            #a.set_aspect('equal')
+            a.grid(True)
+            
+            a.axhline(y=0, color='k')
+            a.axvline(x=0, color='k')
+    
+            canvas = FigureCanvasTkAgg(fig, tabs[i])
+            canvas.get_tk_widget().grid()
+            canvas.draw()
+
+            #############
+ 
+            tab_control.add(tab, text=self.titles_tabs[i])      # Add the tab
+        tab_control.grid()  # Pack to make visible
+    
+        return tabs
+    
+    def update_graphs(self):
         
-    def load_graph(self, filename):
-        print('load-graph')
-        print(filename)
-        self.filename = filename
-        self.points = self.read_graph(filename)
-        self.data = self.calc.calculate_all(self.points)
-        #self.update_table(table)
         
+        self.tab_control.grid_forget()
+        self.tab_control.destroy()
+        self.tab_control = ttk.Notebook(self.box_mid)
+        """Graphs (tabs)"""
+        tabs = []
+        for i in range(len(self.titles_tabs)):
+            tab = ttk.Frame(self.tab_control, borderwidth=1, relief="raised") # Create a tab 
+            #################### 
+         
+            tabs.append(tab)
+            
+            fig = Figure(figsize=(6,6))
+            a = fig.add_subplot(111)
+           
+            temp = self.data[i]
+            temp2 = np.array(list(zip(*temp)))
+            x = temp2[0]
+            y = temp2[1]
+
+
+            a.plot(x, y,color='blue')
+    
+            a.set_title (self.titles_tabs[i], fontsize=16)
+            a.set_ylabel("Y", fontsize=14)
+            a.set_xlabel("X", fontsize=14)
+            
+            #a.set_aspect('equal')
+            a.grid(True)
+            
+            a.axhline(y=0, color='k')
+            a.axvline(x=0, color='k')
+    
+            canvas = FigureCanvasTkAgg(fig, tabs[i])
+            canvas.get_tk_widget().grid()
+            canvas.draw()
+
+            #############
+ 
+            self.tab_control.add(tab, text=self.titles_tabs[i])      # Add the tab
+        self.tab_control.grid()  # Pack to make visible
+    
+        return tabs
+        
+        
+    def load_graph(self):
+        print('in load graph')
+        temp = self.input.get()
+        if len(temp) > 0:
+            self.filename = temp
+            self.points = self.read_graph(self.filename)
+            self.data = self.calc.calculate_all(self.points)
+            self.update_table()
+            self.update_graphs()
+        else:
+            print('niks ingevuld')
+  
+#        self.update_graphs()
+        """
     def create_menu(self, master):
         btns = []
         files = []
@@ -205,12 +265,11 @@ class Gui:
         #Create buttons
         for i in range(len(files)):
             #Create graph choie menu
-            btn = Button(master, text='Graph '+str(files[i]), command=self.load_graph(files[i]), bg='PaleTurquoise2')
+            btn = Button(master, text='Graph '+str(files[i]), command=self.load_graph(self.files[i]), bg='PaleTurquoise2')
             btn.grid(sticky=W+E+N+S)
             btns.append(btn)
-            
         return btns
-    
+    """
     """Table"""
     def create_table(self, master):
         t_content = []
@@ -220,23 +279,95 @@ class Gui:
         #Sets up title row
         for i in range(self.table_w):
             b = Label(master, text=self.titles[i], bg='medium spring green')
-            b.grid(row=2, column=i, sticky=W+E+N+S)
+            b.grid(row=0, column=i, sticky=W+E+N+S)
             t_content[i].append(b)
         
         #Sets up title column (index)
         for i in range(self.table_h):
             text1 = 'i = ' + str(i)
             b = Label(master, text=text1, bg='white')
-            b.grid(row=i+3, column=0, sticky=W+E+N+S)
+            b.grid(row=i+1, column=0, sticky=W+E+N+S)
             t_content[0].append(b)
             
-        for i in range(1, self.table_w):
+        for i in range(self.table_w):
             for j in range(self.table_h): #Rows
                 b = Label(master, text='', bg='white', borderwidth=1, relief="sunken")
-                b.grid(row=j+3, column=i, sticky=W+E+N+S)
+                b.grid(row=j+1, column=i, sticky=W+E+N+S)
                 t_content[i].append(b)
                 
         return t_content
+    
+    def update_table(self):               
+        self.table.grid_forget()
+        self.table.destroy()
+        self.table = Frame(self.window, bg="white", borderwidth=1, relief="solid")
+        self.table.grid(row=0, column=1)
+        self.table_content.clear()
+        self.table_content = []
+        self.table_h = len(self.data[0])
+        #Sets up title row
+        for i in range(self.table_w):
+            b = Label(self.table, text=self.titles[i], bg='medium spring green')
+            b.grid(row=0, column=i, sticky=W+E+N+S)
+           # table_conten[i].append(b)
+        
+        #Sets up title column (index)
+        for i in range(self.table_h):
+            text1 = 'i = ' + str(i)
+            b = Label(self.table, text=text1, bg='white')
+            b.grid(row=i+1, column=0, sticky=W+E+N+S)
+            #table_conten[0].append(b)
+          
+        for i in range(self.table_h):
+            x = round(self.data[0][i][0], 3)
+            b = Label(self.table, text=x, bg='white', borderwidth=1, relief="sunken")
+            b.grid(row=i+1, column=1, sticky=W+E+N+S)
+            
+        for i in range(len(self.data)):
+            self.table_content.append([])
+            
+            height = len(self.data[i])
+            print(height)
+            for j in range(height): #Rows
+                y = round(self.data[i][j][1], 3)
+                b = Label(self.table, text=y, bg='white', borderwidth=1, relief="sunken")
+                b.grid(row=j+1, column=i+2, sticky=W+E+N+S)
+                self.table_content[i].append(b)
+       
+        
+        
+        
+     
+
+                
+   
+        
+    """def update_table(self, table):
+        data = self.data
+        
+        width = len(data)
+        height = len(data[0])
+    
+        for i in range(width):
+            height = len(data[i])
+            #setup column for x-coord
+            if i == 0:
+                for j in range(height): #Rows
+                    x = round(data[i][j][0], 3)
+                    y = round(data[i][j][1], 3)
+                    text1 = '(' + repr(x) + ', ' + repr(y) + ')'
+                    b = Label(table, text=text1, bg='white', borderwidth=1, relief="sunken")
+                    b.grid(row=j+3, column=i+1, sticky=W+E+N+S)
+                    
+                continue
+            
+            #setup columns for resulting data
+ 
+            for j in range(height): #Rows
+                y = round(data[i][j][1], 3)
+                b = Label(table, text=y, bg='white', borderwidth=1, relief="sunken")
+                b.grid(row=j+3, column=i+1, sticky=W+E+N+S)
+                """
    
     def save_graph(self, points_drawing):
         #rewrite format of the file
@@ -297,34 +428,6 @@ class Gui:
         self.update_table(table)
         self.update_tabs(tabs)
     
-    def update_table(self, table):
-        data = self.data
-        
-        """"""
-        width = len(data)
-        height = len(data[0])
-    
-        for i in range(width):
-            height = len(data[i])
-            #setup column for x-coord
-            if i == 0:
-                for j in range(height): #Rows
-                    x = round(data[i][j][0], 3)
-                    y = round(data[i][j][1], 3)
-                    text1 = '(' + repr(x) + ', ' + repr(y) + ')'
-                    b = Label(table, text=text1, bg='white', borderwidth=1, relief="sunken")
-                    b.grid(row=j+3, column=i+1, sticky=W+E+N+S)
-                    
-                continue
-            
-            #setup columns for resulting data
- 
-            for j in range(height): #Rows
-                y = round(data[i][j][1], 3)
-                b = Label(table, text=y, bg='white', borderwidth=1, relief="sunken")
-                b.grid(row=j+3, column=i+1, sticky=W+E+N+S)
-                
-
     def update_tabs(self, tabs):
         pass
         

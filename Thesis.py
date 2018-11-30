@@ -32,7 +32,7 @@ class Calculations:
         #calculate surface
         surfaces_list = self.surface_list(rc2_list)
         surface_total = [sum(x) for x in zip(*surfaces_list)] #format: [total surface, total neg serface, total pos surface]
-        oordeel = self.beoordeel_grafiek(surfaces_list, surface_total[0])
+        #oordeel = self.beoordeel_grafiek(surfaces_list, surface_total[0])
         
         data = points, rc1_list, rc2_list, surfaces_list
         
