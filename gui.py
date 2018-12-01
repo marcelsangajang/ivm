@@ -14,6 +14,79 @@ import re
 #https://gist.github.com/EugeneBakin/76c8f9bcec5b390e45df scrollframe
 #https://stackoverflow.com/questions/17125842/changing-the-text-on-a-label
 #https://stackoverflow.com/questions/3085696/adding-a-scrollbar-to-a-group-of-widgets-in-tkinter/3092341#3092341
+
+class Example(tk.Frame):
+    def __init__(self, root):
+
+        tk.Frame.__init__(self, root)
+        self.canvas = tk.Canvas(root, borderwidth=0, background="#ffffff")
+        self.frame = tk.Frame(self.canvas, background="#ffffff")
+        self.vsb = tk.Scrollbar(root, orient="vertical", command=self.canvas.yview)
+        self.canvas.configure(yscrollcommand=self.vsb.set)
+
+        self.vsb.grid(row=0, column = 0, rowspan=2, sticky=E+N+S)
+        self.canvas.grid(row=0, column = 0, rowspan = 2, sticky=N+W+S)
+        self.canvas.create_window((8,8), window=self.frame, anchor="nw", 
+                                  tags="self.frame")
+
+        self.frame.bind("<Configure>", self.onFrameConfigure)
+
+        #self.populate()
+
+    def populate(self, data):
+        titles = ['Index', 'X', 'Y', 'RC1', 'RC2', 'Surface i to i + 1: Total || breder || smaller ']
+        """Put in some fake data
+        for row in range(100):
+            tk.Label(self.frame, text="%s" % row, width=3, borderwidth="1", 
+                     relief="solid").grid(row=row, column=0)
+            t="this is the second column for row %s" %row
+            tk.Label(self.frame, text=t).grid(row=row, column=1)
+        """
+        table_w = len(titles)
+        table_h = len(data[0])
+        #Sets up title row
+        for i in range(table_w):
+            b = Label(self.frame, text=titles[i], bg='medium spring green')
+            b.grid(row=0, column=i, sticky=W+E+N+S)
+           # table_conten[i].append(b)
+        
+        #Sets up title column (index)
+        for i in range(table_h):
+            text1 = 'i = ' + str(i)
+            b = Label(self.frame, text=text1, bg='white')
+            b.grid(row=i+1, column=0, sticky=W+E+N+S)
+            #table_conten[0].append(b)
+          
+        #creates rows for X coord
+        for i in range(table_h):
+            x = round(data[0][i][0], 3)
+            b = Label(self.frame, text=x, bg='white', borderwidth=1, relief="sunken")
+            b.grid(row=i+1, column=1, sticky=W+E+N+S)
+            
+        #Creates rows for Y, RC1, RC2, surfaces
+        for i in range(len(data)):       
+            height = len(data[i])
+
+            if i == len(data) - 1:
+                for j in range(height): #Rows
+                    y0 = str(round(data[i][j][0], 2))
+                    y1 = str(round(data[i][j][1], 2))
+                    y2 = str(round(data[i][j][2], 2))
+                    b = Label(self.frame, text=y0 + ' || ' + y1 + ' || ' + y2, bg='white', borderwidth=1, relief="sunken")
+                    b.grid(row=j+1, column=i+2, sticky=W+E+N+S)
+      
+                continue
+                      
+            for j in range(height): #Rows
+                y = round(data[i][j][1], 3)
+                b = Label(self.frame, text=y, bg='white', borderwidth=1, relief="sunken")
+                b.grid(row=j+1, column=i+2, sticky=W+E+N+S)
+  
+
+    def onFrameConfigure(self, event):
+        '''Reset the scroll region to encompass the inner frame'''
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+        
 class Gui:
     def __init__(self):
         self.calc = Thesis.Calculations()
@@ -304,29 +377,34 @@ class Gui:
     
     def update_table(self):         
         self.table.grid_forget()
-        self.table.destroy()
+        #self.table.destroy()
         self.table = Frame(self.window, bg="white", borderwidth=1, relief="solid")
-        self.table.grid(row=0, column=1)
+        self.table.grid(row=0, rowspan = 2, column=1, sticky=N+E+S+W)
+       # scrollbar.grid_forget()
+        scrollbar = Example(self.table)
+        scrollbar.populate(self.data)
+        scrollbar.grid(rowspan=2, sticky=N+E+S+W)
+        """
         self.table_content.clear()
         self.table_content = []
         self.table_h = len(self.data[0])
         #Sets up title row
         for i in range(self.table_w):
-            b = Label(self.table, text=self.titles[i], bg='medium spring green')
+            b = Label(scrollbar, text=self.titles[i], bg='medium spring green')
             b.grid(row=0, column=i, sticky=W+E+N+S)
            # table_conten[i].append(b)
         
         #Sets up title column (index)
         for i in range(self.table_h):
             text1 = 'i = ' + str(i)
-            b = Label(self.table, text=text1, bg='white')
+            b = Label(scrollbar, text=text1, bg='white')
             b.grid(row=i+1, column=0, sticky=W+E+N+S)
             #table_conten[0].append(b)
           
         #creates rows for X coord
         for i in range(self.table_h):
             x = round(self.data[0][i][0], 3)
-            b = Label(self.table, text=x, bg='white', borderwidth=1, relief="sunken")
+            b = Label(scrollbar, text=x, bg='white', borderwidth=1, relief="sunken")
             b.grid(row=i+1, column=1, sticky=W+E+N+S)
             
         #Creates rows for Y, RC1, RC2, surfaces
@@ -340,16 +418,16 @@ class Gui:
                     y0 = str(round(self.data[i][j][0], 2))
                     y1 = str(round(self.data[i][j][1], 2))
                     y2 = str(round(self.data[i][j][2], 2))
-                    b = Label(self.table, text=y0 + ' || ' + y1 + ' || ' + y2, bg='white', borderwidth=1, relief="sunken")
+                    b = Label(scrollbar, text=y0 + ' || ' + y1 + ' || ' + y2, bg='white', borderwidth=1, relief="sunken")
                     b.grid(row=j+1, column=i+2, sticky=W+E+N+S)
                     self.table_content[i].append(b)
                 continue
                       
             for j in range(height): #Rows
                 y = round(self.data[i][j][1], 3)
-                b = Label(self.table, text=y, bg='white', borderwidth=1, relief="sunken")
+                b = Label(scrollbar, text=y, bg='white', borderwidth=1, relief="sunken")
                 b.grid(row=j+1, column=i+2, sticky=W+E+N+S)
-                self.table_content[i].append(b)
+                self.table_content[i].append(b)"""
       
     def save_graph(self, points_drawing):
         #rewrite format of the file
