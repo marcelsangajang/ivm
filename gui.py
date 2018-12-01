@@ -12,6 +12,8 @@ import re
 #https://pythonprogramming.net/how-to-embed-matplotlib-graph-tkinter-gui/
 #Drawing graphs https://www.python-course.eu/tkinter_events_binds.php
 #https://gist.github.com/EugeneBakin/76c8f9bcec5b390e45df scrollframe
+#https://stackoverflow.com/questions/17125842/changing-the-text-on-a-label
+#https://stackoverflow.com/questions/3085696/adding-a-scrollbar-to-a-group-of-widgets-in-tkinter/3092341#3092341
 class Gui:
     def __init__(self):
         self.calc = Thesis.Calculations()
@@ -24,7 +26,7 @@ class Gui:
         self.w_canvas = 500
         self.h_canvas = 500
         
-        self.titles = ['Index', 'X', 'Y', 'RC1', 'RC2', 'Surface from i to i + 1']
+        self.titles = ['Index', 'X', 'Y', 'RC1', 'RC2', 'Surface i to i + 1: Total || breder || smaller ']
         self.titles_tabs = ['Origrinal graph', 'RC1', 'RC2']
         self.table_h = 20
         self.table_w = len(self.titles)
@@ -44,13 +46,14 @@ class Gui:
         self.menu = Frame(self.window, bg="orchid1", borderwidth=1, relief="solid")
         self.menu.grid(row=0, column=0, sticky=N)
         
-        self.menu_label = Label(self.menu, text="Kies een grafiek", bg='medium spring green')
-        self.menu_label.grid(row=0, sticky=N+E+S+W)
+        self.menu_label = Label(self.menu, text="Choose graph", bg='medium spring green')
+        self.menu_label.grid(row=0, column=0, sticky=N+E+S+W)
         #self.menu_buttons = []
+        
         self.input = Entry(self.menu, text="")
-        self.input.grid()
-        self.input_button = Button(self.menu, text="Bereken", command=self.load_graph, bg='medium spring green')
-        self.input_button.grid(sticky=E)
+        self.input.grid(row=0, column=1)
+        self.input_button = Button(self.menu, text="Load graph", command=self.load_graph, bg='orchid1')
+        self.input_button.grid(row = 1, columnspan = 2, sticky=N+E+S+W)
         
         """Frame for table"""
         self.table = Frame(self.window, bg="white", borderwidth=1, relief="solid")
@@ -130,6 +133,7 @@ class Gui:
         #Stores drawing as file
         def clicked3():
             self.save_graph(points_drawing)   
+            points_drawing.clear()
             #update_menu(menu_buttons)
                         
         #Standard buttons
@@ -243,6 +247,7 @@ class Gui:
             self.filename = temp
             self.points = self.read_graph(self.filename)
             self.data = self.calc.calculate_all(self.points)
+            print(self.data[len(self.data) - 1])
             self.update_table()
             self.update_graphs()
         else:
@@ -297,7 +302,7 @@ class Gui:
                 
         return t_content
     
-    def update_table(self):               
+    def update_table(self):         
         self.table.grid_forget()
         self.table.destroy()
         self.table = Frame(self.window, bg="white", borderwidth=1, relief="solid")
@@ -318,57 +323,34 @@ class Gui:
             b.grid(row=i+1, column=0, sticky=W+E+N+S)
             #table_conten[0].append(b)
           
+        #creates rows for X coord
         for i in range(self.table_h):
             x = round(self.data[0][i][0], 3)
             b = Label(self.table, text=x, bg='white', borderwidth=1, relief="sunken")
             b.grid(row=i+1, column=1, sticky=W+E+N+S)
             
+        #Creates rows for Y, RC1, RC2, surfaces
         for i in range(len(self.data)):
             self.table_content.append([])
             
             height = len(self.data[i])
-            print(height)
+
+            if i == len(self.data) - 1:
+                for j in range(height): #Rows
+                    y0 = str(round(self.data[i][j][0], 2))
+                    y1 = str(round(self.data[i][j][1], 2))
+                    y2 = str(round(self.data[i][j][2], 2))
+                    b = Label(self.table, text=y0 + ' || ' + y1 + ' || ' + y2, bg='white', borderwidth=1, relief="sunken")
+                    b.grid(row=j+1, column=i+2, sticky=W+E+N+S)
+                    self.table_content[i].append(b)
+                continue
+                      
             for j in range(height): #Rows
                 y = round(self.data[i][j][1], 3)
                 b = Label(self.table, text=y, bg='white', borderwidth=1, relief="sunken")
                 b.grid(row=j+1, column=i+2, sticky=W+E+N+S)
                 self.table_content[i].append(b)
-       
-        
-        
-        
-     
-
-                
-   
-        
-    """def update_table(self, table):
-        data = self.data
-        
-        width = len(data)
-        height = len(data[0])
-    
-        for i in range(width):
-            height = len(data[i])
-            #setup column for x-coord
-            if i == 0:
-                for j in range(height): #Rows
-                    x = round(data[i][j][0], 3)
-                    y = round(data[i][j][1], 3)
-                    text1 = '(' + repr(x) + ', ' + repr(y) + ')'
-                    b = Label(table, text=text1, bg='white', borderwidth=1, relief="sunken")
-                    b.grid(row=j+3, column=i+1, sticky=W+E+N+S)
-                    
-                continue
-            
-            #setup columns for resulting data
- 
-            for j in range(height): #Rows
-                y = round(data[i][j][1], 3)
-                b = Label(table, text=y, bg='white', borderwidth=1, relief="sunken")
-                b.grid(row=j+3, column=i+1, sticky=W+E+N+S)
-                """
-   
+      
     def save_graph(self, points_drawing):
         #rewrite format of the file
         text = str(points_drawing)

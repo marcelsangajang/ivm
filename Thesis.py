@@ -102,8 +102,8 @@ class Calculations:
         a_x = a[0]; a_y = a[1]; b_x = b[0]; b_y = b[1]
         
         if (a_y <= 0 and b_y <= 0) or (a_y >= 0 and b_y >= 0): #both y values negative or positive
-            opp_vierkant = (b_x - a_x) * min(abs(a_y), b_y) #opp vierkant
-            opp_driehoek = (b_x - a_x) * (max(abs(a_y), b_y) - min(abs(a_y), b_y)) * 0.5
+            opp_vierkant = (b_x - a_x) * min(abs(a_y), abs(b_y)) #opp vierkant
+            opp_driehoek = (b_x - a_x) * (max(abs(a_y), abs(b_y)) - min(abs(a_y), abs(b_y))) * 0.5
             opp = opp_vierkant + opp_driehoek
             
             if a_y <= 0:
