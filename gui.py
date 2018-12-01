@@ -374,11 +374,6 @@ class Gui:
         text = str(points_drawing)
         text = re.sub('[^0-9.]', ' ', text).lstrip()
  
-        print('points drawing---------')
-        print(points_drawing)
-        print('text---------')
-        print(text)
-        
         files = []
         #Find all txt files, creates a non-taken name
         for file in os.listdir(self.filepath):
@@ -391,6 +386,7 @@ class Gui:
         #Iterates though X coords (= every 2nd number in txt file)
         string = ""  
         i = 0
+     
         while i < len(temp) - 4:
             counter = 1
             x = float(temp[i])
@@ -403,10 +399,13 @@ class Gui:
                 counter += 1
 
             if counter != 1:
-                y = self.h_canvas - y / counter
-            
+                y =  (y / counter)
+                
+                
+            y = self.h_canvas - y
             i = j  
             string += str(x) + ' ' + str(y) + ' '
+        print(string)
         
         #Create unique name for file
         for i in range(100):
