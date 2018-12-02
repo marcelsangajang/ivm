@@ -31,15 +31,28 @@ class Calculations:
         
         #calculate surface
         surfaces_list = self.surface_list(rc2_list)
-        surface_total = [sum(x) for x in zip(*surfaces_list)] #format: [total surface, total neg serface, total pos surface]
+         #format: [total surface, total neg serface, total pos surface]
         #oordeel = self.beoordeel_grafiek(surfaces_list, surface_total[0])
         
-        data = points, rc1_list, rc2_list, surfaces_list
-        
+        #returns: X, Y, RC1, RC2
+        temp = list(zip(*points))
+        x = temp[0]
+        y = temp[1]
+        temp = list(zip(*rc1_list))
+        rc1 = temp[1]
+        temp = list(zip(*rc2_list))
+        rc2 = temp[1]
+        data = x, y, rc1, rc2
         return data
 
     
-    def beoordeel_grafiek(self, surfaces_list, surface_total):
+    def algorithm(self, x_list, rc2_list, n_size):
+        
+        a = list(zip(x_list, rc2_list))
+        print(rc2_list)
+        surfaces_list = self.surface_list(a)
+        surface_totals = [sum(x) for x in zip(*surfaces_list)]  #format: [total surface, total neg serface, total pos surface]
+        surface_total = surface_totals[0]
         n_size = 1
         oordeel1 = []; oordeel2 = []
         
@@ -70,23 +83,27 @@ class Calculations:
             pos_ratio = round(pos / total, 2)
             total_ratio = round(total / surface_total, 2)
             
-            #oordeel op verhoudingen
+            oordeel1.append(neg_ratio)
+                
+            oordeel2.append(total_ratio)
+             
+        return oordeel1, oordeel2
+    
+    def assessment(self, neg_ratio, total_ratio):
             if neg_ratio > .6:
-                oordeel1.append('breder ({}-{})'.format(neg_ratio, pos_ratio))
+                oordeel1.append('b')
             elif pos_ratio > .6:
-                oordeel1.append('smaller({}-{})'.format(neg_ratio, pos_ratio))
+                oordeel1.append('s')
             else:
-                oordeel1.append('rechte lijn ({}-{})'.format(neg_ratio, pos_ratio))
+                oordeel1.append('r')
                 
             #oordeel op oppervlakte ratio t.o.v. geheel
             if total_ratio > .6:
-                oordeel2.append('breder ({})'.format(total_ratio))
+                oordeel2.append('b')
             elif pos_ratio > .6:
-                oordeel2.append('smaller({})'.format(total_ratio))
+                oordeel2.append('s')
             else:
-                oordeel2.append('rechte lijn ({})'.format(total_ratio))
-             
-        return oordeel1, oordeel2
+                oordeel2.append('r')
     
     def surface_list(self, rc2_list):
         surfaces = []
