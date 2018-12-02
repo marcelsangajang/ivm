@@ -89,21 +89,28 @@ class Calculations:
              
         return oordeel1, oordeel2
     
-    def assessment(self, neg_ratio, total_ratio):
-            if neg_ratio > .6:
+    def assessment(self, ratios, neg_ratio, total_ratio):
+        oordeel1 = []
+        oordeel2 = []
+        neg = ratios[0]
+        tot = ratios[1]
+        
+        for i in range(len(neg)):
+            #Vergelijk de verhouding 
+            if neg[i] > neg_ratio:
                 oordeel1.append('b')
-            elif pos_ratio > .6:
+            elif 1 - neg[i] > neg_ratio:
                 oordeel1.append('s')
             else:
                 oordeel1.append('r')
                 
             #oordeel op oppervlakte ratio t.o.v. geheel
-            if total_ratio > .6:
-                oordeel2.append('b')
-            elif pos_ratio > .6:
-                oordeel2.append('s')
+            if tot[i] > total_ratio:
+                oordeel2.append('b-s')
             else:
                 oordeel2.append('r')
+        
+        return oordeel1, oordeel2
     
     def surface_list(self, rc2_list):
         surfaces = []

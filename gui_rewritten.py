@@ -75,19 +75,20 @@ class Gui:
         self.data = [] #= #self.calc.calculate_all(self.points)
         self.w_canvas = 500
         self.h_canvas = 500
-        
+        self.inp = None
         self.titles_table = ['Index', 'X', 'Y', 'RC1', 'RC2']
         self.titles_tabs = ['Origrinal graph', 'RC1', 'RC2']
         self.table_h = 20
         self.table_w = len(self.titles_table)
         
      
-           
+        self.ratio_table = []
         #main window
         self.window = root
+        self.window.grid()
         self.sizex = 1400
         self.sizey = 1000
-        self.window.geometry("%dx%d" % (self.sizex, self.sizey))
+        #self.window.geometry("%dx%d" % (self.sizex, self.sizey))
  
         """Frame for menu menu"""
 
@@ -98,8 +99,8 @@ class Gui:
         self.menu1 = Frame(self.menu, bg="spring green", borderwidth=1, relief="solid")
         self.menu1.grid(row=0, sticky=N+E+S+W)
                 
-        self.menu_label1 = Label(self.menu1, bg="spring green", text="Input options:")
-        self.menu_label1.grid(row=0, column=0, sticky=N+E+S+W)
+        #self.menu_label1 = Label(self.menu1, bg="spring green", text="Input options:")
+        #self.menu_label1.grid(row=0, column=0, sticky=N+E+S+W)
         
         self.menu_label2 = Label(self.menu1, bg="spring green", text="Choose graph")
         self.menu_label2.grid(row=2, column=0, sticky=N+E+S+W)
@@ -109,25 +110,30 @@ class Gui:
         self.input_button = Button(self.menu1, text="Load graph", command=self.load_graph, bg='green3')
         self.input_button.grid(row = 3, columnspan = 2, sticky=N+E+S+W)
         
-        """menu 2"""
-        self.menu2 = Frame(self.menu, borderwidth=1, relief="solid" , bg='steelblue1')
-        self.menu2.grid(row=1,  sticky=N+E+S+W)
+        self.input_button2 = Button(self.menu1, text="Apply algorithm", command=self.algorithm, bg='steelblue3')
+        self.input_button2.grid(row=4, columnspan = 2, sticky=N+E+S+W)
         
-        self.menu_label3 = Label(self.menu2, text="Output options:", bg='steelblue1')
-        self.menu_label3.grid(row=1)
-        self.input_button2 = Button(self.menu2, text="Apply algorithm", command=self.algorithm, bg='steelblue3')
-        self.input_button2.grid(row=2, columnspan = 2, sticky=N+E+S+W)
+        self.input_button3 = Button(self.menu1, text="Draw graph", command=self.drawing, bg='mediumorchid3')
+        self.input_button3.grid(row=6, columnspan = 2, sticky=W+N+S+E)
+        
+        
+        """menu 2"""
+        #self.menu2 = Frame(self.menu, borderwidth=1, relief="solid" , bg='steelblue1')
+        #self.menu2.grid(row=1,  sticky=N+E+S+W)
+        
+        #self.menu_label3 = Label(self.menu2, text="Output options:", bg='steelblue1')
+        #self.menu_label3.grid(row=1)
+        #self.input_button2 = Button(self.menu2, text="Apply algorithm", command=self.algorithm, bg='steelblue3')
+        #self.input_button2.grid(row=2, columnspan = 2, sticky=N+E+S+W)
         
         """menu 3"""
-        self.menu3 = Frame(self.menu, borderwidth=1, relief="solid" , bg='mediumorchid1')
-        self.menu3.grid(row=2,  sticky=N+E+S+W)
+        #self.menu3 = Frame(self.menu, borderwidth=1, relief="solid" , bg='mediumorchid1')
+        #self.menu3.grid(row=2,  sticky=N+E+S+W)
         
-        self.menu_label4 = Label(self.menu3, text="Drawing options:", bg='mediumorchid1')
-        self.menu_label4.grid(row=1)
-        self.input_button3 = Button(self.menu3, text="Clear drawing", command='', bg='mediumorchid3')
-        self.input_button3.grid(row=2, column = 0, sticky=W)
-        self.input_button4 = Button(self.menu3, text="Save drawing", command='', bg='mediumorchid3')
-        self.input_button4.grid(row=2, column= 1, sticky=E)
+       # self.menu_label4 = Label(self.menu3, text="Drawing options:", bg='mediumorchid1')
+        #self.menu_label4.grid(row=1)
+        #self.input_button3 = Button(self.menu3, text="Draw graph", command=self.drawing, bg='mediumorchid3')
+        #self.input_button3.grid(row=2, column = 0, sticky=W)
         
         """Frame for table"""
         self.table = Frame(self.window, bg="white", borderwidth=1, relief="solid")
@@ -141,25 +147,62 @@ class Gui:
         self.box_mid.grid(row=0, column=2, sticky=W+E+N+S)
         
         """Frame for drawing"""
-        self.box_right = Frame(self.window, bg="white", borderwidth=1, relief="solid")
-        self.box_right.grid(row=0, column=3, sticky=W+E+N+S)
-        self.drawing(self.box_right)
+        #self.box_right = Frame(self.window, bg="white", borderwidth=1, relief="solid")
+        #self.box_right.grid(row=0, column=3, sticky=W+E+N+S)
                 
     def algorithm(self):
-        rc2_list = self.data[len(self.data) - 1]
-        titles = ['Index', 'Verhouding B - S', 'Oppervlakte ratio ']
-        n_size = 5
-        ratios = self.calc.algorithm(self.x, rc2_list, n_size)
+        
+        main_titles = []
+ 
+        
+
+        
+        #Window
         w = Tk()
         w.grid()
+     
+        l = Label(w, bg="spring green", text="Calculate for N")
+        l.grid(row=0, column=0, sticky=N+S+W)
+        self.inp = Entry(w, text="")
+        self.inp.grid(row=0, column=0)
         
         t = Frame(w, bg="white", borderwidth=1, relief="solid")
         t.grid(sticky=N+E+W+S)
         e = Example(t)
         e.grid()
-        e.update_table(ratios, titles)
+        #self.assess(e, 5, 0.6, 0.25)
+        #Buttons
+        input_button = Button(w, text="Calculate:", command=self.assess(e, t), bg='mediumorchid3')
+        input_button.grid(row=0, column=0, sticky=E)
+        
         w.mainloop()
+        #Table
 
+
+        
+        
+        
+        
+    def assess(self, root, t):
+        n_size = 5
+        neg_limit = 0.6
+        total_limit = 0.25
+        n_size = self.inp.get()
+        print('in assess')
+        titles = ['Index', 'Verhouding B - S', 'Oppervlakte ratio ']
+        rc2_list = self.data[len(self.data) - 1]
+        ratios = self.calc.algorithm(self.x, rc2_list, n_size)
+        answer = self.calc.assessment(ratios, neg_limit, total_limit)
+        self.ratio_table.append(ratios[0])
+        self.ratio_table.append(ratios[1])
+        #self.ratio_table.append(answer[1])
+        root.grid_forget()
+        root.destroy()
+        root = Example(t)
+        root.grid()
+        root.update_table(self.ratio_table, titles)
+        root.update()
+       
    
     def load_graph(self):
         temp = self.input.get()
@@ -213,8 +256,11 @@ class Gui:
     """
     """Table"""
     
-    def drawing(self, root):
+    def drawing(self):
+        print('in drawing')
         """Drawings"""        
+        root = Tk()
+        root.grid()
         points_drawing = []
         spline = 0 
         tag1 = "theline"

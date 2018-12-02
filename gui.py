@@ -15,78 +15,6 @@ import re
 #https://stackoverflow.com/questions/17125842/changing-the-text-on-a-label
 #https://stackoverflow.com/questions/3085696/adding-a-scrollbar-to-a-group-of-widgets-in-tkinter/3092341#3092341
 
-class Example(tk.Frame):
-    def __init__(self, root):
-
-        tk.Frame.__init__(self, root)
-        self.canvas = tk.Canvas(root, borderwidth=0, background="#ffffff")
-        self.frame = tk.Frame(self.canvas, background="#ffffff")
-        self.vsb = tk.Scrollbar(root, orient="vertical", command=self.canvas.yview)
-        self.canvas.configure(yscrollcommand=self.vsb.set)
-
-        self.vsb.grid(row=0, column = 0, rowspan=2, sticky=E+N+S)
-        self.canvas.grid(row=0, column = 0, rowspan = 2, sticky=N+W+S)
-        self.canvas.create_window((8,8), window=self.frame, anchor="nw", 
-                                  tags="self.frame")
-
-        self.frame.bind("<Configure>", self.onFrameConfigure)
-
-        #self.populate()
-
-    def populate(self, data):
-        titles = ['Index', 'X', 'Y', 'RC1', 'RC2', 'Surface i to i + 1: Total || breder || smaller ']
-        """Put in some fake data
-        for row in range(100):
-            tk.Label(self.frame, text="%s" % row, width=3, borderwidth="1", 
-                     relief="solid").grid(row=row, column=0)
-            t="this is the second column for row %s" %row
-            tk.Label(self.frame, text=t).grid(row=row, column=1)
-        """
-        table_w = len(titles)
-        table_h = len(data[0])
-        #Sets up title row
-        for i in range(table_w):
-            b = Label(self.frame, text=titles[i], bg='medium spring green')
-            b.grid(row=0, column=i, sticky=W+E+N+S)
-           # table_conten[i].append(b)
-        
-        #Sets up title column (index)
-        for i in range(table_h):
-            text1 = 'i = ' + str(i)
-            b = Label(self.frame, text=text1, bg='white')
-            b.grid(row=i+1, column=0, sticky=W+E+N+S)
-            #table_conten[0].append(b)
-          
-        #creates rows for X coord
-        for i in range(table_h):
-            x = round(data[0][i][0], 3)
-            b = Label(self.frame, text=x, bg='white', borderwidth=1, relief="sunken")
-            b.grid(row=i+1, column=1, sticky=W+E+N+S)
-            
-        #Creates rows for Y, RC1, RC2, surfaces
-        for i in range(len(data)):       
-            height = len(data[i])
-
-            if i == len(data) - 1:
-                for j in range(height): #Rows
-                    y0 = str(round(data[i][j][0], 2))
-                    y1 = str(round(data[i][j][1], 2))
-                    y2 = str(round(data[i][j][2], 2))
-                    b = Label(self.frame, text=y0 + ' || ' + y1 + ' || ' + y2, bg='white', borderwidth=1, relief="sunken")
-                    b.grid(row=j+1, column=i+2, sticky=W+E+N+S)
-      
-                continue
-                      
-            for j in range(height): #Rows
-                y = round(data[i][j][1], 3)
-                b = Label(self.frame, text=y, bg='white', borderwidth=1, relief="sunken")
-                b.grid(row=j+1, column=i+2, sticky=W+E+N+S)
-  
-
-    def onFrameConfigure(self, event):
-        '''Reset the scroll region to encompass the inner frame'''
-        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
-        
 class Gui:
     def __init__(self):
         self.calc = Thesis.Calculations()
@@ -116,28 +44,52 @@ class Gui:
         self.height = 20#len(self.points)
         
         """Frame for menu menu"""
-        self.menu = Frame(self.window, bg="orchid1", borderwidth=1, relief="solid")
-        self.menu.grid(row=0, column=0, sticky=N)
+
+        self.menu = Frame(self.window, borderwidth=1, relief="solid")
+        self.menu.grid(column=0, sticky=N+E+W)
         
-        self.menu_label = Label(self.menu, text="Choose graph", bg='medium spring green')
-        self.menu_label.grid(row=0, column=0, sticky=N+E+S+W)
-        #self.menu_buttons = []
+        """menu 1"""
+        self.menu1 = Frame(self.menu, bg="spring green", borderwidth=1, relief="solid")
+        self.menu1.grid(row=0, sticky=N+E+S+W)
+                
+        self.menu_label1 = Label(self.menu1, bg="spring green", text="Input options:")
+        self.menu_label1.grid(row=0, column=0, sticky=N+E+S+W)
         
-        self.input = Entry(self.menu, text="")
-        self.input.grid(row=0, column=1)
-        self.input_button = Button(self.menu, text="Load graph", command=self.load_graph, bg='orchid1')
-        self.input_button.grid(row = 1, columnspan = 2, sticky=N+E+S+W)
+        self.menu_label2 = Label(self.menu1, bg="spring green", text="Choose graph")
+        self.menu_label2.grid(row=2, column=0, sticky=N+E+S+W)
+        self.input = Entry(self.menu1, text="")
+        self.input.grid(row=2, column=1)
+        
+        self.input_button = Button(self.menu1, text="Load graph", command=self.load_graph, bg='green3')
+        self.input_button.grid(row = 3, columnspan = 2, sticky=N+E+S+W)
+        
+        """menu 2"""
+        self.menu2 = Frame(self.menu, borderwidth=1, relief="solid" , bg='steelblue1')
+        self.menu2.grid(row=1,  sticky=N+E+S+W)
+        
+        self.menu_label3 = Label(self.menu2, text="Output options:", bg='steelblue1')
+        self.menu_label3.grid(row=1)
+        self.input_button2 = Button(self.menu2, text="Apply algorithm", command=self.algorithm, bg='steelblue3')
+        self.input_button2.grid(row=2, columnspan = 2, sticky=N+E+S+W)
+        
+        """menu 3"""
+        self.menu3 = Frame(self.menu, borderwidth=1, relief="solid" , bg='mediumorchid1')
+        self.menu3.grid(row=2,  sticky=N+E+S+W)
+        
+        self.menu_label4 = Label(self.menu3, text="Drawing options:", bg='mediumorchid1')
+        self.menu_label4.grid(row=1)
+        self.input_button3 = Button(self.menu3, text="Clear drawing", command='', bg='mediumorchid3')
+        self.input_button3.grid(row=2, column = 0, sticky=W)
+        self.input_button4 = Button(self.menu3, text="Save drawing", command='', bg='mediumorchid3')
+        self.input_button4.grid(row=2, column= 1, sticky=E)
         
         """Frame for table"""
         self.table = Frame(self.window, bg="white", borderwidth=1, relief="solid")
-        self.table.grid(row=0, column=1)
-        self.table_content = self.create_table(self.table)
+        self.table.grid(row=0, column=1, sticky=N+E+W+S)
         
         """Frame for graphs (tabs where graphis are shown)"""
         self.box_mid = Frame(self.window, bg="white", borderwidth=1, relief="solid")
         self.box_mid.grid(row=0, column=2, sticky=W+E+N+S)
-        self. tab_control = ttk.Notebook(self.box_mid)
-        self.tabs = self.create_graphs(self.tab_control)
         
         """Frame for drawing"""
         self.box_right = Frame(self.window, bg="white", borderwidth=1, relief="solid")
@@ -223,108 +175,81 @@ class Gui:
         
         #Main loop
         self.window.mainloop()
-    def create_graphs(self, tab_control):
-        """Graphs (tabs)"""
-        tabs = []
-        for i in range(len(self.titles_tabs)):
-            tab = ttk.Frame(tab_control, borderwidth=1, relief="raised") # Create a tab 
-            #################### 
-         
-            tabs.append(tab)
-            
-            fig = Figure(figsize=(6,6))
-            a = fig.add_subplot(111)
-            """if :
-                temp = self.data[i]
-                temp2 = np.array(list(zip(*temp)))
-                x = temp2[0]
-                y = temp2[1]
-            else:"""
-            x = []
-            y = []
-
-            a.plot(x, y,color='blue')
-    
-            a.set_title (self.titles_tabs[i], fontsize=16)
-            a.set_ylabel("Y", fontsize=14)
-            a.set_xlabel("X", fontsize=14)
-            
-            #a.set_aspect('equal')
-            a.grid(True)
-            
-            a.axhline(y=0, color='k')
-            a.axvline(x=0, color='k')
-    
-            canvas = FigureCanvasTkAgg(fig, tabs[i])
-            canvas.get_tk_widget().grid()
-            canvas.draw()
-
-            #############
- 
-            tab_control.add(tab, text=self.titles_tabs[i])      # Add the tab
-        tab_control.grid()  # Pack to make visible
-    
-        return tabs
-    
-    def update_graphs(self):
         
+    def algorithm(self):
+        rc2_list = self.data[2]
+        answer = self.calc.algorithm(rc2_list)
         
-        self.tab_control.grid_forget()
-        self.tab_control.destroy()
-        self.tab_control = ttk.Notebook(self.box_mid)
-        """Graphs (tabs)"""
-        tabs = []
-        for i in range(len(self.titles_tabs)):
-            tab = ttk.Frame(self.tab_control, borderwidth=1, relief="raised") # Create a tab 
-            #################### 
-         
-            tabs.append(tab)
-            
-            fig = Figure(figsize=(6,6))
-            a = fig.add_subplot(111)
-           
-            temp = self.data[i]
-            temp2 = np.array(list(zip(*temp)))
-            x = temp2[0]
-            y = temp2[1]
-
-
-            a.plot(x, y,color='blue')
-    
-            a.set_title (self.titles_tabs[i], fontsize=16)
-            a.set_ylabel("Y", fontsize=14)
-            a.set_xlabel("X", fontsize=14)
-            
-            #a.set_aspect('equal')
-            a.grid(True)
-            
-            a.axhline(y=0, color='k')
-            a.axvline(x=0, color='k')
-    
-            canvas = FigureCanvasTkAgg(fig, tabs[i])
-            canvas.get_tk_widget().grid()
-            canvas.draw()
-
-            #############
- 
-            self.tab_control.add(tab, text=self.titles_tabs[i])      # Add the tab
-        self.tab_control.grid()  # Pack to make visible
-    
-        return tabs
+        """Main box"""
+        self.window.withdraw()
+        window2 = Toplevel(self.window)
+        window2.geometry("%dx%d" % (self.sizex, self.sizey))
         
+        """Main Container"""
+        c = Frame(window2, bg="white", borderwidth=1, relief="solid").grid(row=0, column=0)
+    
+        """Left container"""
+        c_m = Frame(c, bg="white", borderwidth=1, relief="solid").grid(row=0, column=0, sticky=N+S+W+E)
+        self.update_table2(c_m, self.data, self.titles)
+
+        """Right container"""
+        #c_r = tk.Frame(c, bg="white", borderwidth=1, relief="solid").grid(row=0, column=1, sticky=E)
         
+        #window2.mainloop()
+        
+        print(answer)
+   
     def load_graph(self):
-        print('in load graph')
         temp = self.input.get()
         if len(temp) > 0:
             self.filename = temp
             self.points = self.read_graph(self.filename)
             self.data = self.calc.calculate_all(self.points)
-            print(self.data[len(self.data) - 1])
             self.update_table()
-            self.update_graphs()
+            self.update_graphs(self.box_mid, self.data, self.titles_tabs)
         else:
             print('niks ingevuld')
+            
+    def update_graphs(self, root, data, titles):
+        #Connect to root
+        tab_control = ttk.Notebook(root)
+        """Graphs (tabs)"""
+        for i in range(len(titles)):
+            #Create tab
+            tab = ttk.Frame(tab_control, borderwidth=1, relief="raised")
+                 
+            self.plot(tab, data[i], titles[i])
+
+            #add tab
+            tab_control.add(tab, text=titles[i])    
+        tab_control.grid()  # grid to make visible
+        
+    def plot(self, root, data, title):
+        fig = Figure(figsize=(6,6))
+        a = fig.add_subplot(111)
+       
+        if data:
+            temp = data
+            temp2 = np.array(list(zip(*temp)))
+            
+            x = temp2[0]
+            y = temp2[1]
+        else:
+            x = []
+            y = []
+
+        a.plot(x, y,color='blue')
+        a.set_title (title, fontsize=16)
+        a.set_ylabel("Y", fontsize=14)
+        a.set_xlabel("X", fontsize=14)
+        #a.set_aspect('equal')
+        a.grid(True)
+        a.axhline(y=0, color='k')
+        a.axvline(x=0, color='k')
+
+        canvas = FigureCanvasTkAgg(fig, root)
+        canvas.get_tk_widget().grid()
+        canvas.draw()
   
 #        self.update_graphs()
         """
@@ -349,44 +274,103 @@ class Gui:
         return btns
     """
     """Table"""
-    def create_table(self, master):
-        t_content = []
-        for i in range(self.table_w):
-            t_content.append([])
+    
+    def update_table2(self, root, data, titles):   
+
+        #table = Example(root)
+        #table.grid()
+       # scrollbar.grid_forget()
+
+        scrollbar = Frame(root).grid()
+        
+        """
+                root = self.table
+        canvas = tk.Canvas(root, borderwidth=0, background="#ffffff")
+        frame = tk.Frame(canvas, background="#ffffff")
+        vsb = tk.Scrollbar(root, orient="vertical", command=canvas.yview)
+        canvas.configure(yscrollcommand=vsb.set)
+        
+        vsb.grid(row=0, column=0, sticky=N+E+S)
+        canvas.grid(row=0, column=0, sticky=N+S+W)
+        canvas.create_window((4,4), window=frame, anchor="nw")
+        
+        def onFrameConfigure(canvas):
+            '''Reset the scroll region to encompass the inner frame'''
+            canvas.configure(scrollregion=canvas.bbox("all"))
+
+        frame.bind("<Configure>", lambda event, canvas=canvas: onFrameConfigure(canvas))
+        
+        scrollbar = frame
+        """
+        if data:
+            table_h = len(data[0])
+            table_w = len(data)
+            print('in data')
+        else:
+            return
         
         #Sets up title row
-        for i in range(self.table_w):
-            b = Label(master, text=self.titles[i], bg='medium spring green')
+        for i in range(table_w):
+            b = Label(scrollbar, text=titles[i], bg='medium spring green')
             b.grid(row=0, column=i, sticky=W+E+N+S)
-            t_content[i].append(b)
+           # table_conten[i].append(b)
         
         #Sets up title column (index)
-        for i in range(self.table_h):
+        for i in range(table_h):
             text1 = 'i = ' + str(i)
-            b = Label(master, text=text1, bg='white')
+            b = Label(scrollbar, text=text1, bg='white')
             b.grid(row=i+1, column=0, sticky=W+E+N+S)
-            t_content[0].append(b)
+            #table_conten[0].append(b)
+          
+        #creates rows for X coord
+        for i in range(table_h):
+            x = round(data[0][i][0], 3)
+            b = Label(scrollbar, text=x, bg='white', borderwidth=1, relief="sunken")
+            b.grid(row=i+1, column=1, sticky=W+E+N+S)
             
-        for i in range(self.table_w):
-            for j in range(self.table_h): #Rows
-                b = Label(master, text='', bg='white', borderwidth=1, relief="sunken")
-                b.grid(row=j+1, column=i, sticky=W+E+N+S)
-                t_content[i].append(b)
-                
-        return t_content
+        #Creates rows for Y, RC1, RC2, surfaces
+        for i in range(len(data)):            
+            height = len(data[i])
+
+            if i == len(data) - 1:
+                for j in range(height): #Rows
+                    y0 = str(round(data[i][j][0], 2))
+                    y1 = str(round(data[i][j][1], 2))
+                    y2 = str(round(data[i][j][2], 2))
+                    b = Label(scrollbar, text=y0 + ' || ' + y1 + ' || ' + y2, bg='white', borderwidth=1, relief="sunken")
+                    b.grid(row=j+1, column=i+2, sticky=W+E+N+S)
+                continue
+                      
+            for j in range(height): #Rows
+                y = round(data[i][j][1], 3)
+                b = Label(scrollbar, text=y, bg='white', borderwidth=1, relief="sunken")
+                b.grid(row=j+1, column=i+2, sticky=W+E+N+S)
     
     def update_table(self):         
         self.table.grid_forget()
-        #self.table.destroy()
+        self.table.destroy()
         self.table = Frame(self.window, bg="white", borderwidth=1, relief="solid")
-        self.table.grid(row=0, rowspan = 2, column=1, sticky=N+E+S+W)
+        self.table.grid(row = 0, column = 1)
        # scrollbar.grid_forget()
-        scrollbar = Example(self.table)
-        scrollbar.populate(self.data)
-        scrollbar.grid(rowspan=2, sticky=N+E+S+W)
-        """
-        self.table_content.clear()
-        self.table_content = []
+
+        root = self.table
+        canvas = Canvas(root, borderwidth=0, background="#ffffff")
+        frame = Frame(canvas, background="#ffffff")
+        vsb = Scrollbar(root, orient="vertical", command=canvas.yview)
+        canvas.configure(yscrollcommand=vsb.set)
+        
+        vsb.grid(row=0, column=0, sticky=N+E+S)
+        canvas.grid(row=0, column=0, sticky=N+S+W)
+        canvas.create_window((4,4), window=frame, anchor="nw")
+        
+        def onFrameConfigure(canvas):
+            '''Reset the scroll region to encompass the inner frame'''
+            canvas.configure(scrollregion=canvas.bbox("all"))
+
+        frame.bind("<Configure>", lambda event, canvas=canvas: onFrameConfigure(canvas))
+        
+        scrollbar = frame
+        
         self.table_h = len(self.data[0])
         #Sets up title row
         for i in range(self.table_w):
@@ -408,9 +392,7 @@ class Gui:
             b.grid(row=i+1, column=1, sticky=W+E+N+S)
             
         #Creates rows for Y, RC1, RC2, surfaces
-        for i in range(len(self.data)):
-            self.table_content.append([])
-            
+        for i in range(len(self.data)):            
             height = len(self.data[i])
 
             if i == len(self.data) - 1:
@@ -420,14 +402,12 @@ class Gui:
                     y2 = str(round(self.data[i][j][2], 2))
                     b = Label(scrollbar, text=y0 + ' || ' + y1 + ' || ' + y2, bg='white', borderwidth=1, relief="sunken")
                     b.grid(row=j+1, column=i+2, sticky=W+E+N+S)
-                    self.table_content[i].append(b)
                 continue
                       
             for j in range(height): #Rows
                 y = round(self.data[i][j][1], 3)
                 b = Label(scrollbar, text=y, bg='white', borderwidth=1, relief="sunken")
                 b.grid(row=j+1, column=i+2, sticky=W+E+N+S)
-                self.table_content[i].append(b)"""
       
     def save_graph(self, points_drawing):
         #rewrite format of the file
@@ -487,29 +467,7 @@ class Gui:
         self.update_table(table)
         self.update_tabs(tabs)
     
-    def update_tabs(self, tabs):
-        pass
-        
-    def plot (self):
-        x=np.array ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
-        v= np.array ([16,16.31925,17.6394,16.003,17.2861,17.3131,19.1259,18.9694,22.0003,22.81226])
-        p= np.array ([16.23697,     17.31653,     17.22094,     17.68631,     17.73641 ,    18.6368,
-            19.32125,     19.31756 ,    21.20247  ,   22.41444   ,  22.11718  ,   22.12453])
 
-        fig = plt.Figure(figsize=(6,6))
-        a = fig.add_subplot(111)
-        a.scatter(v,x,color='red')
-        a.plot(p, range(2 +max(x)),color='blue')
-        a.invert_yaxis()
-
-        a.set_title ("Estimation Grid", fontsize=16)
-        a.set_ylabel("Y", fontsize=14)
-        a.set_xlabel("X", fontsize=14)
-
-        canvas = FigureCanvasTkAgg(fig, master=self.window)
-        canvas.get_tk_widget().pack()
-        canvas.draw()  
-        
     #https://stackoverflow.com/questions/3925614/how-do-you-read-a-file-into-a-list-in-python
     def read_graph(self, filename):
         #Sample 1 - elucidating each step but not memory efficient
