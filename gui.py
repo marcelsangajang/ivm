@@ -89,7 +89,7 @@ class Gui:
         self.input_button2 = Button(self.menu2, text="Apply algorithm", command=self.algorithm, bg='steelblue3')
         self.input_button2.grid(row=3, columnspan = 2, sticky=N+E+S+W)
         
-        self.input_button2 = Button(self.menu2, text="Punt reductie", command=self.new_screen, bg='steelblue3')
+        self.input_button2 = Button(self.menu2, text="Punt reductie", command=self.button_puntreductie, bg='steelblue3')
         self.input_button2.grid(row=3, columnspan = 2, sticky=N+E+S+W)
         
 
@@ -127,15 +127,46 @@ class Gui:
         """Frame for drawing"""
         #self.box_right = Frame(self.window, bg="white", borderwidth=1, relief="solid")
         #self.box_right.grid(row=0, column=3, sticky=W+E+N+S)
-                
-    def new_screen(self):
-        new_points = self.reduce_points(self.points, 50)
         
+ 
+    def button_puntreductie(self):
+        new_points = self.reduce_points(self.points, 50) 
         data = self.calc.calculate_all(new_points)
+        print(data)
+        
+        window1 = Tk()
+        window1.grid()
+        window1.title('Points have been reduced')
+        self.new_screen(window1, data)
+        
+        #Applying spline regression on rc1 points
+        rc1_list = data[2]
+        x = data[0]
+        x = x[:-1]
+        s = UnivariateSpline(x, rc1_list, s=1)
+        rc1_list = s(x)
+        points = list(zip(x, rc1_list))
+        
+        #Calculating RC2 with spline points
+        rc2_list = self.calc.rc_list(points)
+        rc1_list = tuple(rc1_list)
+        temp = list(zip(*rc2_list))
+        rc2_list = temp[1]
+        rc2_list = tuple(rc2_list)
+        x = data[0]
+        y = data[1]
+
+
+        data2 = [x, y, rc1_list, rc2_list]
+        window2 = Tk()
+        window2.title('RC1 has been splined')
+        window2.grid()
+        self.new_screen(window2, data2)
+        
+                
+    def new_screen(self, window, data):
         table_h = len(data[0])
         
-        window = Tk()
-        window.grid()
         table = Frame(window, bg="white", borderwidth=1, relief="solid")
         table.grid(row=0, column=1, sticky=N+E+W+S)
         e = Example(table)
