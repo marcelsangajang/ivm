@@ -49,42 +49,41 @@ class Calculations:
     def algorithm(self, x_list, rc2_list, n_size):
         
         a = list(zip(x_list, rc2_list))
-        print(rc2_list)
         surfaces_list = self.surface_list(a)
+        #print('surfaces list----------')
+        #print(surfaces_list)
         surface_totals = [sum(x) for x in zip(*surfaces_list)]  #format: [total surface, total neg serface, total pos surface]
         surface_total = surface_totals[0]
-        n_size = 1
+        
         oordeel1 = []; oordeel2 = []
         
         #itereer langs de lijst met oppervlakte
         for i in range(len(surfaces_list)):
-            total = 0; neg = 0; pos = 0; counter = 2*n_size + 1
+            total = 0; neg = 0; pos = 0; counter = 0
             
             #Itereer langs de neighbourhood van punt i
-            for j in range(2*n_size + 1):
-                x = i - n_size - j 
+            for j in range(2*n_size):
+                x = i - n_size + j 
 
-                if x < 0 or x > len(surfaces_list) :
-                    counter -= 1
-                    if counter == 0:
-                        counter = 1
+                if x < 0 or x > len(surfaces_list) - 1 :
                     continue
                 
                 #print("i = {}, x = {}".format(i,x))
-                
+                counter += 1
                 total += surfaces_list[x][0]
                 neg += surfaces_list[x][1]
                 pos += surfaces_list[x][2]
 
+ 
+            normalized_total = total/counter/surface_total
+            
             if total == 0:
                 total = 1
-
             neg_ratio = round(neg / total, 2)
             pos_ratio = round(pos / total, 2)
-            total_ratio = round(total / surface_total, 2)
-            
-            oordeel1.append(neg_ratio)
-                
+            total_ratio = round(normalized_total, 2)
+           # print('Ratios: neg = {}, pos = {}, '.format(neg_ratio, pos_ratio))
+            oordeel1.append(neg_ratio)          
             oordeel2.append(total_ratio)
              
         return oordeel1, oordeel2
@@ -99,7 +98,7 @@ class Calculations:
             #Vergelijk de verhouding 
             if neg[i] > neg_ratio:
                 oordeel1.append('b')
-            elif 1 - neg[i] > neg_ratio:
+            elif 1.0 - neg[i] < 1.0 - neg_ratio:
                 oordeel1.append('s')
             else:
                 oordeel1.append('r')
