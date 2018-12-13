@@ -111,6 +111,50 @@ class Calculations:
         
         return oordeel1, oordeel2
     
+    def beoordeel(self, x_list, rc2_list, norm):
+        if rc2_list[0] < 0:
+            richting = 'concave'
+        else:
+            richting = 'convex'
+            
+        richting_list = [richting]
+        rx = [x_list[0]]
+        ry = [rc2_list[0]]
+        #Finds every surface 
+        for i in range(len(rc2_list)):
+            #Change in direction from wider to smaller
+            if richting == 'concave':
+                if rc2_list[i] >= 0:
+                    richting = 'convex'
+                    richting_list.append(richting)
+                    rx.append(x_list[i])
+                    ry.append(rc2_list[i])
+            else:
+                if rc2_list[i] < 0:
+                    richting = 'concave'
+                    richting_list.append(richting)
+                    rx.append(x_list[i])
+                    ry.append(rc2_list[i])
+             
+        #
+        oordeel = []
+
+        if len(norm) != len(richting_list):
+            #string = 'Vase shape: InCorrect, norm = {}, algorithm found: {}'.format(norm, richting_list)
+            string = "Number of surfaces INCORRECT: we found {}, norm = {}".format(len(richting_list), len(norm))
+            oordeel.append(string)
+            return oordeel
+            
+        string = "Vase shape CORRECT: we found {}, norm = {}".format(richting_list, norm)
+        for i in range(len(richting_list)):
+            if richting_list[i] != norm[i]:
+                string = "Vase shape INCORRECT: we found {}, norm = {}".format(richting_list, norm)
+                break
+            
+        oordeel.append(string)
+                
+            
+        return oordeel
     def surface_list(self, rc2_list):
         surfaces = []
         for i in range(len(rc2_list) - 1):

@@ -132,7 +132,6 @@ class Gui:
     def button_puntreductie(self):
         new_points = self.reduce_points(self.points, 50) 
         data = self.calc.calculate_all(new_points)
-        print(data)
         
         window1 = Tk()
         window1.grid()
@@ -163,6 +162,10 @@ class Gui:
         window2.grid()
         self.new_screen(window2, data2)
         
+        norm = ['concave', 'convex']
+        oordeel = self.calc.beoordeel(x, rc2_list, norm)
+        print(oordeel)
+        
                 
     def new_screen(self, window, data):
         table_h = len(data[0])
@@ -179,7 +182,6 @@ class Gui:
         x = data[0]
         y_coords = data[1:]
         self.update_graphs(box_mid, x, y_coords, self.titles_tabs)
-        print('Aantal punten = {}'.format(len(data[2])))
         
         
         
@@ -272,7 +274,6 @@ class Gui:
             self.x = self.data[0]
             y_coords = self.data[1:]
             self.update_graphs(self.box_mid, self.x, y_coords, self.titles_tabs)
-            print('Aantal punten = {}'.format(len(self.data[2])))
         else:
             print('niks ingevuld')
               
