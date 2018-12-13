@@ -23,20 +23,20 @@ class Calculations:
     def __init__(self):
         pass
     
-    def calculate_all(self, points, titles=['After splining f(x) and RC1', 'After splining f(x)', 'After splining RC1'], nr_points = 50):
-        filename = 'graph1.txt'
+    def calculate_all(self, points, titles, nr_points = 50):
         data_list = []
         
         #Creates array for X and array for Y
-        temp = self.reduce_points(points, nr_points)
-        temp = list(zip(*temp))
+        temp1 = self.reduce_points(points, nr_points)
+        print(temp1)
+        temp = list(zip(*temp1))
         x = temp[0]
         y = temp[1]
         
         for i in range(len(titles)):
             #Calculate RC1 and RC2
             #Calculate RC1 and RC2 after splining XY, then splining RC1
-            if i == 0:
+            if i == 2:
                 s = UnivariateSpline(x, y, s=1)
                 ys = s(x)
                 rc1_list = self.rc_list(x, ys)
@@ -47,18 +47,19 @@ class Calculations:
                 rc2_list = self.rc_list(x, ys) 
                 
             #Calculate RC1 and RC2 after splining X Y
-            elif i == 1:
+            elif i == 0:
                 s = UnivariateSpline(x, y, s=1)
                 ys = s(x)
      
                 rc1_list = self.rc_list(x, ys)
                 rc2_list = self.rc_list(x, rc1_list)      
             #Calculate RC2 after splining RC1
-            elif i == 2:
+            elif i == 1:
                 rc1_list = self.rc_list(x, y)  
                 xs = x[:-1]
                 s = UnivariateSpline(xs, rc1_list, s=1)
                 ys = s(x)
+                rc1_list = ys
                 rc2_list = self.rc_list(x, ys) 
             else:
                 #Calculate RC1 and RC2 based on raw input data 
@@ -138,7 +139,43 @@ class Calculations:
              
         return oordeel1, oordeel2
         
-    def beoordeel(self, x_list, rc2_list, norm):
+    def beoordeel(self, x_list, rc2_list, norm_x, norm_rc2, surface_data, surface_data_norm):
+        function_behaviour = self.find_function_behaviour(x_list, rc2_list)
+        norm_behaviour = self.find_function_behaviour(norm_x, norm_rc2)
+
+        concave = str(100* round(surface_data[1] / surface_data[0], 4)) #percentage of surface < 0
+        convex = str(100* round(surface_data[2] / surface_data[0], 4))  #percentage of surface > 0
+        norm_concave = str(100* round(surface_data_norm[1] / surface_data_norm[0], 4)) #percentage of surface < 0
+        norm_convex = str(100* round(surface_data_norm[2] / surface_data_norm[0], 4))  #percentage of surface > 0
+        
+        difference = abs(float(concave) - float(norm_concave))
+        max_difference = 10
+        oordeel = ''
+        if difference < max_difference:
+            oordeel += "--- Surface distribution: CORRECT ---\n Graph: Concave = {}%, Convex = {}%\n Norm: Concave = {}%, Convex = {}%\n Absolute difference = {}%, limit = {}%\n".format(concave, convex, norm_concave, norm_convex, difference, max_difference)
+        else:
+            oordeel += "--- Surface distribution: INCORRECT ---\n Graph: Concave = {}%, Convex = {}%\n Norm: Concave = {}%, Convex = {}%\n  Absolute difference = {}%, limit = {}%\n".format(concave, convex, norm_concave, norm_convex, difference, max_difference)
+        
+            
+        if len(norm_behaviour) != len(function_behaviour):
+            oordeel += "--- Structure f(x): INCORRECT ---\n Number of surfaces = {}, norm = {}\n".format(len(function_behaviour), len(norm_behaviour))
+            return oordeel
+            
+        decision = 0
+        for i in range(len(function_behaviour)):
+            if function_behaviour[i] != norm_behaviour[i]:
+                decision = 1
+                break
+            
+        if decision == 0:
+            oordeel += "--- Structure f(x): CORRECT ---\n Number of surfaces = {}, norm = {}\n We found {}\n norm = {}\n".format(len(function_behaviour), len(norm_behaviour), function_behaviour, norm_behaviour)
+        else:
+            oordeel += "--- Structure f(x): INCORRECT ---\n Number of surfaces = {}, norm = {}\n We found {}\n norm = {}\n".format(len(function_behaviour), len(norm_behaviour), function_behaviour, norm_behaviour)
+            
+            
+        return oordeel
+    
+    def find_function_behaviour(self, x_list, rc2_list):
         if rc2_list[0] < 0:
             richting = 'concave'
         else:
@@ -162,19 +199,8 @@ class Calculations:
                     richting_list.append(richting)
                     rx.append(x_list[i])
                     ry.append(rc2_list[i])
-             
-
-        if len(norm) != len(richting_list):
-            string = "--- Structure: INCORRECT ---\n We found {}\n norm = {}\n".format(richting_list, norm)
-            return string
-            
-        string = "--- Structure: CORRECT ---\n We found {}\n norm = {}\n".format(richting_list, norm)
-        for i in range(len(richting_list)):
-            if richting_list[i] != norm[i]:
-                string = "--- Structure: INCORRECT ---\n We found {}\n norm = {}\n".format(richting_list, norm)
-                break
-            
-        return string
+        
+        return richting_list
     
     def surface_list(self, rc2_list):
         total = 0

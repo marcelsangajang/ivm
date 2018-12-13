@@ -20,7 +20,8 @@ from scipy.interpolate import UnivariateSpline
 class Gui:
     def __init__(self, root):
         self.calc = Thesis.Calculations()
-        self.filename = '1'
+        self.filename = '0'
+        self.norm_file = '0'
         self.filepath = './graphs/'
         self.file_list = ['0']
 
@@ -33,7 +34,7 @@ class Gui:
         self.inp = None
         self.titles_table = ['Index', 'X', 'Y', 'RC1', 'RC2']
         self.titles_tabs = ['f(x)', 'RC1', 'RC2']
-        self.titles_mastertabs = ['After splining f(x) and RC1', 'After splining f(x)', 'After splining RC1']
+        self.titles_mastertabs = ['After splining f(x)', 'After splining RC1', 'After splining f(x) and RC1',]
         self.table_h = 20
         self.table_w = len(self.titles_table)
         
@@ -68,28 +69,39 @@ class Gui:
         
                 # Create a Tkinter variable
         self.tkvar = StringVar(self.menu1)
-         
+        self.tk_norm = StringVar(self.menu1)
         # Dictionary with options
         self.choices = {'0'}
+        self.choices_norm = {'0'}
         
         self.tkvar.set('0') # set the default option
-         
+        self.tk_norm.set('0')
         self.popupMenu = OptionMenu(self.menu1, self.tkvar, *self.choices)
-        Label(self.menu1, bg="spring green", text="Choose graph").grid(row=2, column=0, sticky=N+E+S+W)
+        Label(self.menu1, bg="spring green", text="Choose function").grid(row=2, column=0, sticky=N+E+S+W)
         self.popupMenu.grid(row=2, column=1)
+        
+        self.popupMenu_norm = OptionMenu(self.menu1, self.tk_norm, *self.choices_norm)
+        Label(self.menu1, bg="spring green", text="Choose norm").grid(row=3, column=0, sticky=N+E+S+W)
+        self.popupMenu_norm.grid(row=3, column=1)
         
         # on change dropdown value
         def change_dropdown(*args):
-            print( self.tkvar.get() )
+            self.norm_file = self.tk_norm.get()
+            print(self.norm_file)
+            #name = self.tk_norm.get()
+           # self.norm = self.read_graph(name)
+           # self.norm_data = self.calc.calculate_all(self.norm)
          
         # link function to change dropdown
-        self.tkvar.trace('w', change_dropdown)
-        
+        #self.tkvar.trace('w', change_dropdown)
+        self.tk_norm.trace('w', change_dropdown)
         self.update_filelist()
 
         
         self.input_button = Button(self.menu1, text="Load graph", command=self.load_graph, bg='green3')
-        self.input_button.grid(row = 3, columnspan = 2, sticky=N+E+S+W)
+        self.input_button.grid(row = 4, columnspan = 2, sticky=N+E+S+W)
+        
+ 
         
         self.input_button3 = Button(self.menu1, text="Draw graph", command=self.drawing, bg='mediumorchid3')
         self.input_button3.grid(row=6, columnspan = 2, sticky=W+N+S+E)
@@ -100,6 +112,8 @@ class Gui:
         files = []
         tempfiles = []
         self.choices.clear()
+        self.choices_norm.clear()
+        
                 #Find all txt files, creates a non-taken name
         for file in os.listdir(self.filepath):
             if file.endswith(".txt"):
@@ -113,6 +127,7 @@ class Gui:
    
         for i in range(len(tempfiles)):
             self.choices.update({tempfiles[i]})
+            self.choices_norm.update({tempfiles[i]})
             
       
         menu = self.popupMenu["menu"]
@@ -120,6 +135,12 @@ class Gui:
         for string in self.choices:
             menu.add_command(label=string, 
                              command=lambda value=string: self.tkvar.set(value))
+            
+        menu = self.popupMenu_norm["menu"]
+        menu.delete(0, "end")
+        for string in self.choices_norm:
+            menu.add_command(label=string, 
+                             command=lambda value=string: self.tk_norm.set(value))
             
     def algorithm(self):
         
@@ -164,18 +185,18 @@ class Gui:
         #Table
       
     def load_graph(self):
-        temp = self.tkvar.get()
-        if len(temp) == 0:               
-            print('niks ingevuld')
-            return
-              
-        self.filename = temp
+        self.filename = self.tkvar.get()
         self.raw_points = self.read_graph(self.filename) 
-        self.raw_data = self.calc.calculate_all(self.raw_points)
-            
+        self.raw_data = self.calc.calculate_all(self.raw_points, self.titles_mastertabs)
+        
+        norm_points = self.read_graph(self.norm_file)
+        norm_data = self.calc.calculate_all(norm_points, self.titles_mastertabs)
+        
         window = Tk()
         window.grid()
-        window.title('Grafiek {}'.format(temp))
+        temp1 = self.tkvar.get()
+    
+        window.title('Grafiek = {}, norm = {}'.format(temp1, self.norm_file))
         
         mastertabs = ttk.Notebook(window)
   
@@ -186,7 +207,7 @@ class Gui:
             tab = ttk.Frame(mastertabs, borderwidth=1, relief="raised")
          
             self.data = self.raw_data[i]
-            print(str(self.data[3][20]))
+            norm = norm_data[i]
             self.table_h = len(self.data[i])
             
             """Add frame for table"""
@@ -196,9 +217,6 @@ class Gui:
             e.grid()
             e.update_table(self.data, self.titles_table)
       
-            #Tabs and graphs
-            #self.box_mid.grid_remove()
-           # self.box_mid.destroy()
            
             """Add frame for graphs"""
             box_mid = Frame(tab, bg="white", borderwidth=1, relief="solid")
@@ -213,21 +231,11 @@ class Gui:
             T = Text(tab)
             T.grid(row=0, column=2, sticky=N+E+S+W)
             
-            decision = "CORRECT"
-            
-            norm = ['concave', 'convex']
-            string = self.calc.beoordeel(self.data[0], self.data[3], norm)
-            T.insert(END, string)
-             
-             
             surface_data = self.data[len(self.data)-1]
-            print(surface_data)
-            concave = str(100* round(surface_data[1] / surface_data[0], 4)) #percentage of surface < 0
-            convex = str(100* round(surface_data[2] / surface_data[0], 4))  #percentage of surface > 0
-         
-            string = "--- Surface distribution: {} ---\n Graph: Concave: {}%, Convex: {}%\n Norm: Concave: {}%, Convex: {}%\n".format(decision,concave, convex, concave, convex)
+            surface_data_norm = list(norm[len(norm) - 1])
+            string = self.calc.beoordeel(self.data[0], self.data[3], norm[0], norm[3], surface_data, surface_data_norm)
             T.insert(END, string)
-
+            
             #add tab
             mastertabs.add(tab, text=self.titles_mastertabs[i])    
         mastertabs.grid(sticky=N)  # grid to make visible
