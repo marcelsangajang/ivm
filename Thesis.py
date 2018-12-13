@@ -29,7 +29,7 @@ class Calculations:
         
         #Creates array for X and array for Y
         temp = self.reduce_points(points, nr_points)
-        temp = list(zip(*points))
+        temp = list(zip(*temp))
         x = temp[0]
         y = temp[1]
         
@@ -139,30 +139,7 @@ class Calculations:
             oordeel2.append(total_ratio)
              
         return oordeel1, oordeel2
-    
-    def assessment(self, ratios, neg_ratio, total_ratio):
-        oordeel1 = []
-        oordeel2 = []
-        neg = ratios[0]
-        tot = ratios[1]
         
-        for i in range(len(neg)):
-            #Vergelijk de verhouding 
-            if neg[i] > neg_ratio:
-                oordeel1.append('b')
-            elif 1.0 - neg[i] < 1.0 - neg_ratio:
-                oordeel1.append('s')
-            else:
-                oordeel1.append('r')
-                
-            #oordeel op oppervlakte ratio t.o.v. geheel
-            if tot[i] > total_ratio:
-                oordeel2.append('b-s')
-            else:
-                oordeel2.append('r')
-        
-        return oordeel1, oordeel2
-    
     def beoordeel(self, x_list, rc2_list, norm):
         if rc2_list[0] < 0:
             richting = 'concave'

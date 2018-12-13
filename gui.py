@@ -43,6 +43,7 @@ class Gui:
         #main window
         self.window = root
         self.window.grid()
+        
 
         
         self.sizex = 1400
@@ -53,6 +54,7 @@ class Gui:
 
         self.menu = Frame(self.window, borderwidth=1, relief="solid")
         self.menu.grid(column=0, sticky=N+E+W)
+        
         
         """menu 1"""
         self.menu1 = Frame(self.menu, bg="spring green", borderwidth=1, relief="solid")
@@ -92,66 +94,7 @@ class Gui:
         self.input_button3 = Button(self.menu1, text="Draw graph", command=self.drawing, bg='mediumorchid3')
         self.input_button3.grid(row=6, columnspan = 2, sticky=W+N+S+E)
         
-        #menu 2
-      #  self.menu2 = Frame(self.menu, bg="steelblue1", borderwidth=1, relief="solid")
-      #  self.menu2.grid(row=1, sticky=N+E+S+W)
-        """
-        l = Label(self.menu2, bg="steelblue1", text="Neighbourhood ratio = ")
-        l.grid(row=0, sticky=W)
-        self.inp1 = Entry(self.menu2, text="")
-        self.inp1.grid(row = 0, column=1, sticky=E)
         
-        l = Label(self.menu2, bg="steelblue1", text="Grenswaarde B/S ratio = ")
-        l.grid(row=1, sticky=W)
-        self.inp2 = Entry(self.menu2, text="")
-        self.inp2.grid(row = 1, column=1, sticky=E)
-        
-        l = Label(self.menu2, bg="steelblue1", text="Grenswaarde oppverlakte ratio = ")
-        l.grid(row=2, sticky=W)
-        self.inp3 = Entry(self.menu2, text="")
-        self.inp3.grid(row = 2, column=1, sticky=E)
-        
-        self.input_button2 = Button(self.menu2, text="Apply algorithm", command=self.algorithm, bg='steelblue3')
-        self.input_button2.grid(row=3, columnspan = 2, sticky=N+E+S+W)
-        """
-      #  self.input_button2 = Button(self.menu2, text="Beoordeel grafiek", command=self.button_puntreductie, bg='steelblue3')
-      #  self.input_button2.grid(row=3, columnspan = 2, sticky=N+E+S+W)
-        
-
-        
-        
-        """menu 2"""
-        #self.menu2 = Frame(self.menu, borderwidth=1, relief="solid" , bg='steelblue1')
-        #self.menu2.grid(row=1,  sticky=N+E+S+W)
-        
-        #self.menu_label3 = Label(self.menu2, text="Output options:", bg='steelblue1')
-        #self.menu_label3.grid(row=1)
-        #self.input_button2 = Button(self.menu2, text="Apply algorithm", command=self.algorithm, bg='steelblue3')
-        #self.input_button2.grid(row=2, columnspan = 2, sticky=N+E+S+W)
-        
-        """menu 3"""
-        #self.menu3 = Frame(self.menu, borderwidth=1, relief="solid" , bg='mediumorchid1')
-        #self.menu3.grid(row=2,  sticky=N+E+S+W)
-        
-       # self.menu_label4 = Label(self.menu3, text="Drawing options:", bg='mediumorchid1')
-        #self.menu_label4.grid(row=1)
-        #self.input_button3 = Button(self.menu3, text="Draw graph", command=self.drawing, bg='mediumorchid3')
-        #self.input_button3.grid(row=2, column = 0, sticky=W)
-        
-        """Frame for table"""
-       # self.table = Frame(self.window, bg="white", borderwidth=1, relief="solid")
-       # self.table.grid(row=0, column=1, sticky=N+E+W+S)
-        #self.scrollb = Example(self.table)
-        #self.scrollb.grid()
-
-        
-        """Frame for graphs (tabs where graphis are shown)"""
-       # self.box_mid = Frame(self.window, bg="white", borderwidth=1, relief="solid")
-        #self.box_mid.grid(row=0, column=2, sticky=W+E+N+S)
-        
-        """Frame for drawing"""
-        #self.box_right = Frame(self.window, bg="white", borderwidth=1, relief="solid")
-        #self.box_right.grid(row=0, column=3, sticky=W+E+N+S)
         
     def update_filelist(self):
         files = []
@@ -291,6 +234,7 @@ class Gui:
 
         window = Tk()
         window.grid()
+        window.title('Grafiek {}'.format(temp))
         
         mastertabs = ttk.Notebook(window)
   
@@ -304,6 +248,7 @@ class Gui:
     
                 
             self.data = self.raw_data[i]
+            print(str(self.data[3][20]))
             self.table_h = len(self.data[i])
             
             #Table
@@ -620,6 +565,7 @@ class Example(tk.Frame):
 
 if __name__ == '__main__':
     root = Tk()
+    root.title('Control panel')
     g = Gui(root)
     root.mainloop()
  
