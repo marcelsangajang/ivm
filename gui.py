@@ -22,6 +22,7 @@ class Gui:
         self.calc = Thesis.Calculations()
         self.filename = '1'
         self.filepath = './graphs/'
+        self.file_list = ['0']
         self.files = []
         self.points = []#self.read_graph(self.filename)
         #Calculates all values
@@ -58,8 +59,28 @@ class Gui:
         
         self.menu_label2 = Label(self.menu1, bg="spring green", text="Choose graph")
         self.menu_label2.grid(row=2, column=0, sticky=N+E+S+W)
-        self.input = Entry(self.menu1, text="")
-        self.input.grid(row=2, column=1)
+        
+                # Create a Tkinter variable
+        self.tkvar = StringVar(self.menu1)
+         
+        # Dictionary with options
+        self.choices = {'0'}
+        
+        self.tkvar.set('0') # set the default option
+         
+        self.popupMenu = OptionMenu(self.menu1, self.tkvar, *self.choices)
+        Label(self.menu1, bg="spring green", text="Choose graph").grid(row=2, column=0, sticky=N+E+S+W)
+        self.popupMenu.grid(row=2, column=1)
+        
+        # on change dropdown value
+        def change_dropdown(*args):
+            print( self.tkvar.get() )
+         
+        # link function to change dropdown
+        self.tkvar.trace('w', change_dropdown)
+        
+        self.update_filelist()
+
         
         self.input_button = Button(self.menu1, text="Load graph", command=self.load_graph, bg='green3')
         self.input_button.grid(row = 3, columnspan = 2, sticky=N+E+S+W)
@@ -67,10 +88,10 @@ class Gui:
         self.input_button3 = Button(self.menu1, text="Draw graph", command=self.drawing, bg='mediumorchid3')
         self.input_button3.grid(row=6, columnspan = 2, sticky=W+N+S+E)
         
-        """menu 2"""
+        #menu 2
         self.menu2 = Frame(self.menu, bg="steelblue1", borderwidth=1, relief="solid")
         self.menu2.grid(row=1, sticky=N+E+S+W)
-        
+        """
         l = Label(self.menu2, bg="steelblue1", text="Neighbourhood ratio = ")
         l.grid(row=0, sticky=W)
         self.inp1 = Entry(self.menu2, text="")
@@ -88,8 +109,8 @@ class Gui:
         
         self.input_button2 = Button(self.menu2, text="Apply algorithm", command=self.algorithm, bg='steelblue3')
         self.input_button2.grid(row=3, columnspan = 2, sticky=N+E+S+W)
-        
-        self.input_button2 = Button(self.menu2, text="Punt reductie", command=self.button_puntreductie, bg='steelblue3')
+        """
+        self.input_button2 = Button(self.menu2, text="Beoordeel grafiek", command=self.button_puntreductie, bg='steelblue3')
         self.input_button2.grid(row=3, columnspan = 2, sticky=N+E+S+W)
         
 
@@ -128,7 +149,33 @@ class Gui:
         #self.box_right = Frame(self.window, bg="white", borderwidth=1, relief="solid")
         #self.box_right.grid(row=0, column=3, sticky=W+E+N+S)
         
- 
+    def update_filelist(self):
+        files = []
+        tempfiles = []
+        self.choices.clear()
+                #Find all txt files, creates a non-taken name
+        for file in os.listdir(self.filepath):
+            if file.endswith(".txt"):
+                temp = re.sub("\D", "", file)
+                if len(temp) > 0:
+                    files.append(temp)
+                    tempfiles.append(int(temp))
+        #Find files
+        self.file_list = files
+        tempfiles.sort()
+   
+        for i in range(len(tempfiles)):
+            self.choices.update({tempfiles[i]})
+            
+      
+        menu = self.popupMenu["menu"]
+        menu.delete(0, "end")
+        for string in self.choices:
+            menu.add_command(label=string, 
+                             command=lambda value=string: self.tkvar.set(value))
+            
+       
+    
     def button_puntreductie(self):
         new_points = self.reduce_points(self.points, 50) 
         data = self.calc.calculate_all(new_points)
@@ -250,7 +297,7 @@ class Gui:
         
     
     def load_graph(self):
-        temp = self.input.get()
+        temp = self.tkvar.get()
         if len(temp) > 0:
             self.filename = temp
             self.points = self.read_graph(self.filename)
@@ -338,8 +385,9 @@ class Gui:
             
         #Stores drawing as file
         def clicked3():
-            self.save_graph(points_drawing)   
+            self.save_graph(points_drawing) 
             points_drawing.clear()
+            self.update_filelist()
             #update_menu(menu_buttons)
                         
         btn = Button(root, text="Clear", command=clicked2, bg='medium spring green')
