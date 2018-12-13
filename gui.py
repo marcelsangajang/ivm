@@ -23,15 +23,17 @@ class Gui:
         self.filename = '1'
         self.filepath = './graphs/'
         self.file_list = ['0']
-        self.files = []
-        self.points = []#self.read_graph(self.filename)
+
+        self.raw_points = []#self.read_graph(self.filename)
         #Calculates all values
-        self.data = [] #= #self.calc.calculate_all(self.points)
+        self.raw_data = [] #Contains multiple vectors, each vector contains: [x, y, rc1, rc2] 
+        self.data = [] #Contains 1 vector: [x, y, rc1, rc2], based on the raw points read from file
         self.w_canvas = 500
         self.h_canvas = 500
         self.inp = None
         self.titles_table = ['Index', 'X', 'Y', 'RC1', 'RC2']
-        self.titles_tabs = ['Origrinal graph', 'RC1', 'RC2']
+        self.titles_tabs = ['f(x)', 'RC1', 'RC2']
+        self.titles_mastertabs = ['After splining f(x) and RC1', 'After splining f(x)', 'After splining RC1']
         self.table_h = 20
         self.table_w = len(self.titles_table)
         
@@ -41,6 +43,8 @@ class Gui:
         #main window
         self.window = root
         self.window.grid()
+
+        
         self.sizex = 1400
         self.sizey = 1000
         #self.window.geometry("%dx%d" % (self.sizex, self.sizey))
@@ -89,8 +93,8 @@ class Gui:
         self.input_button3.grid(row=6, columnspan = 2, sticky=W+N+S+E)
         
         #menu 2
-        self.menu2 = Frame(self.menu, bg="steelblue1", borderwidth=1, relief="solid")
-        self.menu2.grid(row=1, sticky=N+E+S+W)
+      #  self.menu2 = Frame(self.menu, bg="steelblue1", borderwidth=1, relief="solid")
+      #  self.menu2.grid(row=1, sticky=N+E+S+W)
         """
         l = Label(self.menu2, bg="steelblue1", text="Neighbourhood ratio = ")
         l.grid(row=0, sticky=W)
@@ -110,8 +114,8 @@ class Gui:
         self.input_button2 = Button(self.menu2, text="Apply algorithm", command=self.algorithm, bg='steelblue3')
         self.input_button2.grid(row=3, columnspan = 2, sticky=N+E+S+W)
         """
-        self.input_button2 = Button(self.menu2, text="Beoordeel grafiek", command=self.button_puntreductie, bg='steelblue3')
-        self.input_button2.grid(row=3, columnspan = 2, sticky=N+E+S+W)
+      #  self.input_button2 = Button(self.menu2, text="Beoordeel grafiek", command=self.button_puntreductie, bg='steelblue3')
+      #  self.input_button2.grid(row=3, columnspan = 2, sticky=N+E+S+W)
         
 
         
@@ -135,15 +139,15 @@ class Gui:
         #self.input_button3.grid(row=2, column = 0, sticky=W)
         
         """Frame for table"""
-        self.table = Frame(self.window, bg="white", borderwidth=1, relief="solid")
-        self.table.grid(row=0, column=1, sticky=N+E+W+S)
+       # self.table = Frame(self.window, bg="white", borderwidth=1, relief="solid")
+       # self.table.grid(row=0, column=1, sticky=N+E+W+S)
         #self.scrollb = Example(self.table)
         #self.scrollb.grid()
 
         
         """Frame for graphs (tabs where graphis are shown)"""
-        self.box_mid = Frame(self.window, bg="white", borderwidth=1, relief="solid")
-        self.box_mid.grid(row=0, column=2, sticky=W+E+N+S)
+       # self.box_mid = Frame(self.window, bg="white", borderwidth=1, relief="solid")
+        #self.box_mid.grid(row=0, column=2, sticky=W+E+N+S)
         
         """Frame for drawing"""
         #self.box_right = Frame(self.window, bg="white", borderwidth=1, relief="solid")
@@ -177,7 +181,7 @@ class Gui:
        
     
     def button_puntreductie(self):
-        new_points = self.reduce_points(self.points, 50) 
+        new_points = self.reduce_points(self.raw_points, 50) 
         data = self.calc.calculate_all(new_points)
         
         window1 = Tk()
@@ -273,57 +277,60 @@ class Gui:
         #print(self.answer_table[0])
         #w.mainloop()
         #Table
-    
- 
-        
-    def reduce_points(self, pixel_coords, nr_points = 50):
-        points = []
-        #We want to spread 50 points evenly across the raw data
-        #Deel de data set in 50 (pas op restwaarde) 
-        jumpsize = len(pixel_coords) / nr_points
-        if jumpsize < 1:
-            print('error: jumpsize < 1')
-            return
-        
-        counter = 0
-        for i in range(nr_points):
-            index = int(counter)
-    
-            points.append(pixel_coords[index])
-            counter += jumpsize
-        #Elk nieuw punt krijgt avg y en x in die zone
-        
-        return points
-        
-    
+      
     def load_graph(self):
         temp = self.tkvar.get()
-        if len(temp) > 0:
-            self.filename = temp
-            self.points = self.read_graph(self.filename)
-            self.data = self.calc.calculate_all(self.points)
-            self.table_h = len(self.data[0])
+        if len(temp) == 0:               
+            print('niks ingevuld')
+            return
+              
+        self.filename = temp
+        self.raw_points = self.read_graph(self.filename) 
+        self.raw_data = self.calc.calculate_all(self.raw_points)
+            
+
+        window = Tk()
+        window.grid()
+        
+        mastertabs = ttk.Notebook(window)
+  
+        """Graphs (tabs)"""
+        for i in range(len(self.titles_mastertabs)):
+            #Create tab
+            
+            tab = ttk.Frame(mastertabs, borderwidth=1, relief="raised")
+            
+            
+    
+                
+            self.data = self.raw_data[i]
+            self.table_h = len(self.data[i])
             
             #Table
-            self.table.grid_forget()
-            self.table.destroy()
-            self.table = Frame(self.window, bg="white", borderwidth=1, relief="solid")
-            self.table.grid(row=0, column=1, sticky=N+E+W+S)
-            e = Example(self.table)
+           # self.table.grid_forget()
+           # self.table.destroy()
+            table = Frame(tab, bg="white", borderwidth=1, relief="solid")
+            table.grid(row=0, column=0, sticky=N+E+W+S)
+            e = Example(table)
             e.grid()
             e.update_table(self.data, self.titles_table)
       
             #Tabs and graphs
-            self.box_mid.grid_remove()
-            self.box_mid.destroy()
-            self.box_mid = Frame(self.window, bg="white", borderwidth=1, relief="solid")
-            self.box_mid.grid(row=0, column=2, sticky=W+E+N+S)
-            self.x = self.data[0]
-            y_coords = self.data[1:]
-            self.update_graphs(self.box_mid, self.x, y_coords, self.titles_tabs)
-        else:
-            print('niks ingevuld')
-              
+            #self.box_mid.grid_remove()
+           # self.box_mid.destroy()
+           
+            box_mid = Frame(tab, bg="white", borderwidth=1, relief="solid")
+            box_mid.grid(row=0, column=1, sticky=W+E+N+S)
+            self.x = self.raw_data[0][0]
+            y_coords = self.raw_data[i][1:]
+            self.update_graphs(box_mid, self.x, y_coords, self.titles_tabs)
+            #add tab
+           
+            
+            #add tab
+            mastertabs.add(tab, text=self.titles_mastertabs[i])    
+        mastertabs.grid(sticky=N)  # grid to make visible
+
 #        self.update_graphs()
         """
     def create_menu(self, master):
@@ -402,18 +409,19 @@ class Gui:
         for i in range(len(y_coords)):
             #Create tab
             tab = ttk.Frame(tab_control, borderwidth=1, relief="raised")
-                 
+                
+            if len(y_coords[i]) != len(x):
+                x = x[:-1]
+                
             self.plot(tab, x, y_coords[i], titles[i])
-            x = x[:-1]
+          
             #add tab
             tab_control.add(tab, text=titles[i])    
         tab_control.grid()  # grid to make visible
         
     def plot(self, root, x, y, title):
-        if len(x) != len(y):
-            print('verkeerde lengte')
-            return
-        
+
+            
         s = UnivariateSpline(x, y, s=1)
         ys = s(x)
 

@@ -15,6 +15,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import tkinter
+from scipy.interpolate import UnivariateSpline
 
 #import gui
 
@@ -22,29 +23,80 @@ class Calculations:
     def __init__(self):
         pass
     
-    def calculate_all(self, points):
+    def calculate_all(self, points, titles=['After splining f(x) and RC1', 'After splining f(x)', 'After splining RC1'], nr_points = 50):
         filename = 'graph1.txt'
-
-        #Calculate rcs
-        rc1_list = self.rc_list(points)
-        rc2_list = self.rc_list(rc1_list)
+        data_list = []
         
-        #calculate surface
-        surfaces_list = self.surface_list(rc2_list)
-         #format: [total surface, total neg serface, total pos surface]
-        #oordeel = self.beoordeel_grafiek(surfaces_list, surface_total[0])
-        
-        #returns: X, Y, RC1, RC2
+        #Creates array for X and array for Y
+        temp = self.reduce_points(points, nr_points)
         temp = list(zip(*points))
         x = temp[0]
         y = temp[1]
-        temp = list(zip(*rc1_list))
-        rc1 = temp[1]
-        temp = list(zip(*rc2_list))
-        rc2 = temp[1]
-        data = x, y, rc1, rc2
-        return data
+        
+        for i in range(len(titles)):
+            #Calculate RC1 and RC2
+            #Calculate RC1 and RC2 after splining XY, then splining RC1
+            if i == 0:
+                s = UnivariateSpline(x, y, s=1)
+                ys = s(x)
+                rc1_list = self.rc_list(x, ys)
+                
+                xs = x[:-1]
+                s = UnivariateSpline(xs, rc1_list, s=1)
+                ys = s(x)
+                rc2_list = self.rc_list(x, ys) 
+                
+            #Calculate RC1 and RC2 after splining X Y
+            elif i == 1:
+                s = UnivariateSpline(x, y, s=1)
+                ys = s(x)
+     
+                rc1_list = self.rc_list(x, ys)
+                rc2_list = self.rc_list(x, rc1_list)      
+            #Calculate RC2 after splining RC1
+            elif i == 2:
+                rc1_list = self.rc_list(x, y)  
+                xs = x[:-1]
+                s = UnivariateSpline(xs, rc1_list, s=1)
+                ys = s(x)
+                rc2_list = self.rc_list(x, ys) 
+            else:
+                #Calculate RC1 and RC2 based on raw input data 
+                rc1_list = self.rc_list(x, y)
+                rc2_list = self.rc_list(x, rc1_list)
+                
 
+                
+         
+            
+            #calculate surface
+            #surfaces_list = self.surface_list(rc2_list)
+             #format: [total surface, total neg serface, total pos surface]
+            #oordeel = self.beoordeel_grafiek(surfaces_list, surface_total[0])
+            
+            data = x, y, rc1_list, rc2_list
+            data_list.append(data)
+        return data_list
+    
+
+    def reduce_points(self, pixel_coords, nr_points):
+        points = []
+        #We want to spread 50 points evenly across the raw data
+        #Deel de data set in 50 (pas op restwaarde) 
+        jumpsize = len(pixel_coords) / nr_points
+        if jumpsize < 1:
+            print('error: jumpsize < 1')
+            return
+        
+        counter = 0
+        for i in range(nr_points):
+            index = int(counter)
+    
+            points.append(pixel_coords[index])
+            counter += jumpsize
+        #Elk nieuw punt krijgt avg y en x in die zone
+        
+        return points
     
     def algorithm(self, x_list, rc2_list, n_size):
         
@@ -192,11 +244,11 @@ class Calculations:
                 return opp1 + opp2, opp2, opp1
     
     #Given a list of coordinates, calculates rc for each point
-    def rc_list(self, points):
+    def rc_list(self, x, y):
         rc_list = []
-        for i in range(len(points) - 1):
-            #
-            rc_list.append([points[i][0] , self.rc(points[i], points[i + 1])])
+        for i in range(len(y) - 1):
+            rc = self.rc([x[i], y[i]], [x[i+1], y[i+1]])
+            rc_list.append(rc)
             
         return rc_list
             
