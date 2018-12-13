@@ -65,16 +65,14 @@ class Calculations:
                 rc1_list = self.rc_list(x, y)
                 rc2_list = self.rc_list(x, rc1_list)
                 
-
-                
-         
-            
-            #calculate surface
-            #surfaces_list = self.surface_list(rc2_list)
-             #format: [total surface, total neg serface, total pos surface]
+            #format: [total surface, total neg serface, total pos surface]
+            xs = x[:-2]
+            temp = list(zip(xs, rc2_list))
+            surfaces_list = self.surface_list(temp)
+             
             #oordeel = self.beoordeel_grafiek(surfaces_list, surface_total[0])
             
-            data = x, y, rc1_list, rc2_list
+            data = x, y, rc1_list, rc2_list, surfaces_list
             data_list.append(data)
         return data_list
     
@@ -165,33 +163,34 @@ class Calculations:
                     rx.append(x_list[i])
                     ry.append(rc2_list[i])
              
-        #
-        oordeel = []
 
         if len(norm) != len(richting_list):
-            #string = 'Vase shape: InCorrect, norm = {}, algorithm found: {}'.format(norm, richting_list)
-            string = "Number of surfaces INCORRECT: we found {}, norm = {}".format(len(richting_list), len(norm))
-            oordeel.append(string)
-            return oordeel
+            string = "--- Structure: INCORRECT ---\n We found {}\n norm = {}\n".format(richting_list, norm)
+            return string
             
-        string = "Vase shape CORRECT: we found {}, norm = {}".format(richting_list, norm)
+        string = "--- Structure: CORRECT ---\n We found {}\n norm = {}\n".format(richting_list, norm)
         for i in range(len(richting_list)):
             if richting_list[i] != norm[i]:
-                string = "Vase shape INCORRECT: we found {}, norm = {}".format(richting_list, norm)
+                string = "--- Structure: INCORRECT ---\n We found {}\n norm = {}\n".format(richting_list, norm)
                 break
             
-        oordeel.append(string)
-                
-            
-        return oordeel
+        return string
+    
     def surface_list(self, rc2_list):
-        surfaces = []
+        total = 0
+        neg = 0
+        pos = 0
+        
         for i in range(len(rc2_list) - 1):
             temp = self.surface(rc2_list[i], rc2_list[i+1])
      
             #total surface, negative surface, positive surface
-            surfaces.append([temp[0], temp[1], temp[2]])
+            #surfaces.append([temp[0], temp[1], temp[2]])
+            total += temp[0]
+            neg += temp[1]
+            pos += temp[2]
 
+        surfaces = [total, neg, pos]
         return surfaces
     
     def surface(self, a, b):    

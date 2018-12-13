@@ -121,64 +121,6 @@ class Gui:
             menu.add_command(label=string, 
                              command=lambda value=string: self.tkvar.set(value))
             
-       
-    
-    def button_puntreductie(self):
-        new_points = self.reduce_points(self.raw_points, 50) 
-        data = self.calc.calculate_all(new_points)
-        
-        window1 = Tk()
-        window1.grid()
-        window1.title('Points have been reduced')
-        self.new_screen(window1, data)
-        
-        #Applying spline regression on rc1 points
-        rc1_list = data[2]
-        x = data[0]
-        x = x[:-1]
-        s = UnivariateSpline(x, rc1_list, s=1)
-        rc1_list = s(x)
-        points = list(zip(x, rc1_list))
-        
-        #Calculating RC2 with spline points
-        rc2_list = self.calc.rc_list(points)
-        rc1_list = tuple(rc1_list)
-        temp = list(zip(*rc2_list))
-        rc2_list = temp[1]
-        rc2_list = tuple(rc2_list)
-        x = data[0]
-        y = data[1]
-
-
-        data2 = [x, y, rc1_list, rc2_list]
-        window2 = Tk()
-        window2.title('RC1 has been splined')
-        window2.grid()
-        self.new_screen(window2, data2)
-        
-        norm = ['concave', 'convex']
-        oordeel = self.calc.beoordeel(x, rc2_list, norm)
-        print(oordeel)
-        
-                
-    def new_screen(self, window, data):
-        table_h = len(data[0])
-        
-        table = Frame(window, bg="white", borderwidth=1, relief="solid")
-        table.grid(row=0, column=1, sticky=N+E+W+S)
-        e = Example(table)
-        e.grid()
-        e.update_table(data, self.titles_table)
-  
-        #Tabs and graphs
-        box_mid = Frame(window, bg="white", borderwidth=1, relief="solid")
-        box_mid.grid(row=0, column=2, sticky=W+E+N+S)
-        x = data[0]
-        y_coords = data[1:]
-        self.update_graphs(box_mid, x, y_coords, self.titles_tabs)
-        
-        
-        
     def algorithm(self):
         
         #Get values from user input
@@ -231,7 +173,6 @@ class Gui:
         self.raw_points = self.read_graph(self.filename) 
         self.raw_data = self.calc.calculate_all(self.raw_points)
             
-
         window = Tk()
         window.grid()
         window.title('Grafiek {}'.format(temp))
@@ -243,19 +184,14 @@ class Gui:
             #Create tab
             
             tab = ttk.Frame(mastertabs, borderwidth=1, relief="raised")
-            
-            
-    
-                
+         
             self.data = self.raw_data[i]
             print(str(self.data[3][20]))
             self.table_h = len(self.data[i])
             
-            #Table
-           # self.table.grid_forget()
-           # self.table.destroy()
+            """Add frame for table"""
             table = Frame(tab, bg="white", borderwidth=1, relief="solid")
-            table.grid(row=0, column=0, sticky=N+E+W+S)
+            table.grid(row=0, column=1, sticky=N+E+W+S)
             e = Example(table)
             e.grid()
             e.update_table(self.data, self.titles_table)
@@ -264,14 +200,34 @@ class Gui:
             #self.box_mid.grid_remove()
            # self.box_mid.destroy()
            
+            """Add frame for graphs"""
             box_mid = Frame(tab, bg="white", borderwidth=1, relief="solid")
-            box_mid.grid(row=0, column=1, sticky=W+E+N+S)
+            box_mid.grid(row=0, column=0, sticky=W+E+N+S)
             self.x = self.raw_data[0][0]
             y_coords = self.raw_data[i][1:]
+            y_coords = y_coords[:-1]
             self.update_graphs(box_mid, self.x, y_coords, self.titles_tabs)
             #add tab
-           
             
+            """Add text to mainscreen"""
+            T = Text(tab)
+            T.grid(row=0, column=2, sticky=N+E+S+W)
+            
+            decision = "CORRECT"
+            
+            norm = ['concave', 'convex']
+            string = self.calc.beoordeel(self.data[0], self.data[3], norm)
+            T.insert(END, string)
+             
+             
+            surface_data = self.data[len(self.data)-1]
+            print(surface_data)
+            concave = str(100* round(surface_data[1] / surface_data[0], 4)) #percentage of surface < 0
+            convex = str(100* round(surface_data[2] / surface_data[0], 4))  #percentage of surface > 0
+         
+            string = "--- Surface distribution: {} ---\n Graph: Concave: {}%, Convex: {}%\n Norm: Concave: {}%, Convex: {}%\n".format(decision,concave, convex, concave, convex)
+            T.insert(END, string)
+
             #add tab
             mastertabs.add(tab, text=self.titles_mastertabs[i])    
         mastertabs.grid(sticky=N)  # grid to make visible
@@ -494,7 +450,7 @@ class Example(tk.Frame):
         
     def update_table(self, data, titles):         
         scrollbar = self.frame
-        table_w = len(data) #+1 for index column
+        table_w = len(titles) - 1 #+1 for index column
         table_h = len(data[0]) #+1 for title row
         #Sets up title row
         for i in range(len(titles)):
