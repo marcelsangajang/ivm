@@ -84,13 +84,14 @@ class Gui:
         Label(self.menu1, bg="spring green", text="Choose norm").grid(row=3, column=0, sticky=N+E+S+W)
         self.popupMenu_norm.grid(row=3, column=1)
         
+        Label(self.menu1, bg="spring green", text="Choose nr of points").grid(row=4, column=0, sticky=N+E+S+W)
+        self.nr_points = Entry(self.menu1)
+        self.nr_points.grid(row=4, column=1, sticky=N+E+S+W)
+        
         # on change dropdown value
         def change_dropdown(*args):
             self.norm_file = self.tk_norm.get()
-            print(self.norm_file)
-            #name = self.tk_norm.get()
-           # self.norm = self.read_graph(name)
-           # self.norm_data = self.calc.calculate_all(self.norm)
+
          
         # link function to change dropdown
         #self.tkvar.trace('w', change_dropdown)
@@ -99,15 +100,13 @@ class Gui:
 
         
         self.input_button = Button(self.menu1, text="Load graph", command=self.load_graph, bg='green3')
-        self.input_button.grid(row = 4, columnspan = 2, sticky=N+E+S+W)
-        
- 
+        self.input_button.grid(row = 5, columnspan = 2, sticky=N+E+S+W)
         
         self.input_button3 = Button(self.menu1, text="Draw graph", command=self.drawing, bg='mediumorchid3')
         self.input_button3.grid(row=6, columnspan = 2, sticky=W+N+S+E)
         
         
-        
+    
     def update_filelist(self):
         files = []
         tempfiles = []
@@ -185,18 +184,41 @@ class Gui:
         #Table
       
     def load_graph(self):
+        #Check if nr points has been filled in by user, if not use points = 40
         self.filename = self.tkvar.get()
         self.raw_points = self.read_graph(self.filename) 
-        self.raw_data = self.calc.calculate_all(self.raw_points, self.titles_mastertabs)
+        nr_points = self.nr_points.get()
+        temp = re.sub("\D", "", nr_points)
+        
+        
+        if len(temp) == 0:
+            nr_points = 40
+        else:
+            nr_points = int(temp)
+            
+        if nr_points < 10:
+            print('Cant use N < 10, using N = 10')
+            nr_points = 10
+        elif nr_points >= len(self.raw_points):
+            print('Cant use N > points in raw data, using N = 10')
+            nr_points = 10
+
+        
+        
+
+        self.raw_data = self.calc.calculate_all(self.raw_points, self.titles_mastertabs, nr_points)
         
         norm_points = self.read_graph(self.norm_file)
-        norm_data = self.calc.calculate_all(norm_points, self.titles_mastertabs)
+        norm_data = self.calc.calculate_all(norm_points, self.titles_mastertabs, nr_points)
         
         window = Tk()
         window.grid()
         temp1 = self.tkvar.get()
     
-        window.title('Grafiek = {}, norm = {}'.format(temp1, self.norm_file))
+        window.title('Grafiek = {}, norm = {}, nr points = {}'.format(temp1, self.norm_file, nr_points))
+
+
+        
         
         mastertabs = ttk.Notebook(window)
   
@@ -224,7 +246,11 @@ class Gui:
             self.x = self.raw_data[0][0]
             y_coords = self.raw_data[i][1:]
             y_coords = y_coords[:-1]
-            self.update_graphs(box_mid, self.x, y_coords, self.titles_tabs)
+            
+            x_norm = norm_data[0][0]
+            y_coords_norm = norm[1:]
+            y_coords_norm = y_coords_norm[:-1]
+            self.update_graphs(box_mid, self.x, y_coords, x_norm, y_coords_norm, self.titles_tabs)
             #add tab
             
             """Add text to mainscreen"""
@@ -311,7 +337,7 @@ class Gui:
         btn = Button(root, text="Save", command=clicked3, bg='medium spring green')
         btn.grid(row=1, sticky=N+E+S)
     
-    def update_graphs(self, root, x, y_coords, titles):
+    def update_graphs(self, root, x, y_coords, x_norm, y_coords_norm, titles):
         #Connect to root
         tab_control = ttk.Notebook(root)
         """Graphs (tabs)"""
@@ -322,13 +348,16 @@ class Gui:
             if len(y_coords[i]) != len(x):
                 x = x[:-1]
                 
-            self.plot(tab, x, y_coords[i], titles[i])
+            if len(y_coords_norm[i]) != len(x_norm):
+                x_norm = x_norm[:-1]
+                
+            self.plot(tab, x, y_coords[i], x_norm, y_coords_norm[i], titles[i])
           
             #add tab
             tab_control.add(tab, text=titles[i])    
         tab_control.grid()  # grid to make visible
         
-    def plot(self, root, x, y, title):
+    def plot(self, root, x, y, xn, yn, title):
 
             
         s = UnivariateSpline(x, y, s=1)
@@ -337,8 +366,10 @@ class Gui:
         fig = Figure(figsize=(6,6))
         a = fig.add_subplot(111)
        
-        a.plot(x, y,color='blue')
-        a.plot(x, ys, color='orange')
+        line1 = a.plot(x, y,color='blue', label='Data')
+        line2 = a.plot(x, ys, color='orange', label='Apply spline')
+        line3 = a.plot(xn, yn, color='red', label='Norm')
+        
         a.set_title (title, fontsize=16)
         a.set_ylabel("Y", fontsize=14)
         a.set_xlabel("X", fontsize=14)
@@ -346,10 +377,49 @@ class Gui:
         a.grid(True)
         a.axhline(y=0, color='k')
         a.axvline(x=0, color='k')
+        leg = a.legend(loc='upper left', fancybox=True, shadow=True)
+        
+        
 
+        lines = [line1, line2, line3]
+        lined = dict()
+        i = 0
+        for legline, origline in zip(leg.get_lines(), lines):
+            legline.set_picker(5)  # 5 pts tolerance
+            lined[legline] = origline
+            if i == 1:
+                origline[0].set_visible(False)
+                legline.set_alpha(0.2)
+            
+            i += 1
+            
         canvas = FigureCanvasTkAgg(fig, root)
         canvas.get_tk_widget().grid()
         canvas.draw()
+        
+        def onpick(event):
+            # on the pick event, find the orig line corresponding to the
+            # legend proxy line, and toggle the visibility
+            legline = event.artist
+            origline = lined[legline]
+            print(origline[0])
+            vis = not origline[0].get_visible()
+            origline[0].set_visible(vis)
+            # Change the alpha on the line in the legend so we can see what lines
+            # have been toggled
+            if vis:
+                legline.set_alpha(1.0)
+            else:
+                legline.set_alpha(0.2)
+            canvas.draw()
+            
+
+        
+        canvas.mpl_connect('pick_event', onpick)
+            
+
+        
+        
       
     def save_graph(self, points_drawing):
         #rewrite format of the file

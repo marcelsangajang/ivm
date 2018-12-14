@@ -66,14 +66,14 @@ class Calculations:
                 rc1_list = ys
                 rc2_list = self.rc_list(x, ys) 
                 
-            #Calculate RC1 and RC2 after splining X Y
+            #Spline XY, calc RC1, calc RC2
             elif i == 1:
                 s = UnivariateSpline(x, y, s=1)
                 ys = s(x)
      
                 rc1_list = self.rc_list(x, ys)
                 rc2_list = self.rc_list(x, rc1_list)      
-            #Calculate RC2 after splining RC1
+            #Calc XY, spline RC1, calc RC2
             elif i == 2:
                 rc1_list = self.rc_list(x, y)  
                 xs = x[:-1]
