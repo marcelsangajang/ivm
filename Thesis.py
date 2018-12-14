@@ -28,15 +28,34 @@ class Calculations:
         
         #Creates array for X and array for Y
         temp1 = self.reduce_points(points, nr_points)
-        print(temp1)
         temp = list(zip(*temp1))
         x = temp[0]
         y = temp[1]
         
         for i in range(len(titles)):
+            
             #Calculate RC1 and RC2
-            #Calculate RC1 and RC2 after splining XY, then splining RC1
-            if i == 2:
+            #Spline XY, calculate RC1, spline RC1, calc RC2, spline RC2
+            if i == 4:
+                s = UnivariateSpline(x, y, s=1)
+                ys = s(x)
+                rc1_list = self.rc_list(x, ys)
+                
+                xs = x[:-1]
+                print('1----length rc1 = {}, xs= {}'.format(len(rc1_list), len(xs)))
+                s = UnivariateSpline(xs, rc1_list, s=1)
+                ys = s(x)
+                rc1_list = ys
+                print('2---length rc1 = {}, xs= {}'.format(len(rc1_list), len(xs)))
+                rc2_list = self.rc_list(x, ys) 
+                
+                #print('length rc2 = {}'.format(len(rc2_list)))
+                xs = x[:-1]
+                s = UnivariateSpline(xs, rc2_list, s=1)
+                ys = s(x)
+                rc2_list = ys
+            #Spline XY, calc RC1, spline RC1, calc RC2
+            elif i == 3:
                 s = UnivariateSpline(x, y, s=1)
                 ys = s(x)
                 rc1_list = self.rc_list(x, ys)
@@ -44,27 +63,31 @@ class Calculations:
                 xs = x[:-1]
                 s = UnivariateSpline(xs, rc1_list, s=1)
                 ys = s(x)
+                rc1_list = ys
                 rc2_list = self.rc_list(x, ys) 
                 
             #Calculate RC1 and RC2 after splining X Y
-            elif i == 0:
+            elif i == 1:
                 s = UnivariateSpline(x, y, s=1)
                 ys = s(x)
      
                 rc1_list = self.rc_list(x, ys)
                 rc2_list = self.rc_list(x, rc1_list)      
             #Calculate RC2 after splining RC1
-            elif i == 1:
+            elif i == 2:
                 rc1_list = self.rc_list(x, y)  
                 xs = x[:-1]
                 s = UnivariateSpline(xs, rc1_list, s=1)
                 ys = s(x)
                 rc1_list = ys
                 rc2_list = self.rc_list(x, ys) 
-            else:
+            elif i == 0:
                 #Calculate RC1 and RC2 based on raw input data 
                 rc1_list = self.rc_list(x, y)
                 rc2_list = self.rc_list(x, rc1_list)
+            else:
+                print('Error in method calculate.all in Thesis.py')
+                print(i)
                 
             #format: [total surface, total neg serface, total pos surface]
             xs = x[:-2]
@@ -133,7 +156,7 @@ class Calculations:
             neg_ratio = round(neg / total, 2)
             pos_ratio = round(pos / total, 2)
             total_ratio = round(normalized_total, 2)
-           # print('Ratios: neg = {}, pos = {}, '.format(neg_ratio, pos_ratio))
+     
             oordeel1.append(neg_ratio)          
             oordeel2.append(total_ratio)
              

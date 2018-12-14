@@ -34,7 +34,7 @@ class Gui:
         self.inp = None
         self.titles_table = ['Index', 'X', 'Y', 'RC1', 'RC2']
         self.titles_tabs = ['f(x)', 'RC1', 'RC2']
-        self.titles_mastertabs = ['After splining f(x)', 'After splining RC1', 'After splining f(x) and RC1',]
+        self.titles_mastertabs = ['Raw data', 'After splining f(x)', 'After splining RC1', 'After splining f(x) and RC1', 'After splining f(x), RC1 and RC2']
         self.table_h = 20
         self.table_w = len(self.titles_table)
         
