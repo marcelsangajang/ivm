@@ -1,0 +1,27 @@
+------ immediate improvements-----------
+
+Check what univariate spline returns:
+xs and rc1_list are both length 49
+                s = UnivariateSpline(xs, rc1_list, s=1)
+                ys = s(x)
+                rc1_list = ys
+now rc1_list is length 50
+
+Add number of points to main interface
+
+
+
+
+
+
+
+---data alanlysis---------
+Check if calculations are correct (first RC2 is always huge compared to RC2[-1] = 0), also check last elements (they are lost when calc RC1 and RC2)
+
+Check why some drawings appear to create Asymptotes (RC2 of graph 1)
+
+Check for other curve fitting methods other than spline
+
+Check to see how we are gonna fix drawing imperfections even more
+
+Recheck all calculations with low number of points to verify everything is calculated correctly
