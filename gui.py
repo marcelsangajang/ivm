@@ -91,13 +91,25 @@ class Gui:
         # on change dropdown value
         def change_dropdown(*args):
             self.norm_file = self.tk_norm.get()
-
-         
+            
+        
         # link function to change dropdown
         #self.tkvar.trace('w', change_dropdown)
         self.tk_norm.trace('w', change_dropdown)
         self.update_filelist()
+        
+        self.menu2 = Frame(self.menu, bg="spring green", borderwidth=1, relief="solid")
+        self.menu2.grid(row=1, sticky=N+E+S+W)
+        self.scale = IntVar(self.menu2)
+        self.scale.set(0)
+        Checkbutton(self.menu2, text="Scaling", variable=self.scale).grid(row=0, sticky=W)
 
+        self.tk_scale = StringVar(self.menu2)
+        self.tk_scale.set('x = 100')
+        self.choices_scale = {'data to norm', 'norm to data', 'x = 100'}
+        self.popupMenu_scale = OptionMenu(self.menu2, self.tk_scale, *self.choices_scale)
+        Label(self.menu2, bg="spring green", text="Scale to: ").grid(row=0, column=1, sticky=N+E+S+W)
+        self.popupMenu_scale.grid(row=0, column=3)
         
         self.input_button = Button(self.menu1, text="Load graph", command=self.load_graph, bg='green3')
         self.input_button.grid(row = 5, columnspan = 2, sticky=N+E+S+W)
@@ -141,61 +153,20 @@ class Gui:
             menu.add_command(label=string, 
                              command=lambda value=string: self.tk_norm.set(value))
             
-    def algorithm(self):
-        
-        #Get values from user input
-        n_size = int(self.inp1.get())
-        neg_limit = float(self.inp2.get())
-        total_limit = float(self.inp3.get())
-        
-        #Perform calculations
-        titles = ['Index', 'Verhouding B - S', 'Oppervlakte ratio ']
-        rc2_list = self.data[len(self.data) - 1]
-        
-        
-        
-        ratios = self.calc.algorithm(self.x, rc2_list, n_size)
-        answer = self.calc.assessment(ratios, neg_limit, total_limit)
-    
-        self.ratio_table.clear()
-        self.answer_table.clear()
-        self.ratio_table.append(ratios[0])
-        self.ratio_table.append(ratios[1])
-        self.answer_table.append(answer[0])
-        self.answer_table.append(answer[1])
-        #print(self.ratio_table)
-        main_titles = []
-        
-        #Window
-        w = Tk()
-        w.grid()
-     
-        t = Frame(w, bg="white", borderwidth=1, relief="solid")
-        t.grid(sticky=N+E+W+S)
-        e = Example(t)
-        e.grid()
-        e.update_table2(self.ratio_table, self.answer_table, titles, n_size, neg_limit, total_limit)
-        #self.assess(e, 5, 0.6, 0.25)
-        #Buttons
-        #print('----ratio table en answer table---')
-        #print(self.ratio_table[0])
-        #print(self.answer_table[0])
-        #w.mainloop()
-        #Table
       
     def load_graph(self):
-        #Check if nr points has been filled in by user, if not use points = 40
+        """Preperations and checks"""
         self.filename = self.tkvar.get()
         self.raw_points = self.read_graph(self.filename) 
+        norm_points = self.read_graph(self.norm_file)
         nr_points = self.nr_points.get()
         temp = re.sub("\D", "", nr_points)
-        
         
         if len(temp) == 0:
             nr_points = 40
         else:
             nr_points = int(temp)
-            
+        
         if nr_points < 10:
             print('Cant use N < 10, using N = 10')
             nr_points = 10
@@ -203,22 +174,34 @@ class Gui:
             print('Cant use N > points in raw data, using N = 10')
             nr_points = 10
 
-        
-        
 
-        self.raw_data = self.calc.calculate_all(self.raw_points, self.titles_mastertabs, nr_points)
+
+        #Translate to origin
+        self.raw_points = self.calc.translate_to_origin(self.raw_points)
+        norm_points = self.calc.translate_to_origin(norm_points)
         
-        norm_points = self.read_graph(self.norm_file)
+        #Scale functions to different coordinate system
+        scaling_method = self.tk_scale.get()
+        print(self.scale.get())
+        if self.scale.get() == 1:
+            if scaling_method == 'data to norm':
+                self.raw_points = self.calc.scale(self.raw_points, norm_points)
+            elif scaling_method == 'norm to data':
+                norm_points = self.calc.scale(norm_points, self.raw_points)
+            else: #scale to x=100
+                self.raw_points = self.calc.scale(self.raw_points, [0])
+                norm_points = self.calc.scale(norm_points, [0])
+                
+        
+        #Calculations
+        self.raw_data = self.calc.calculate_all(self.raw_points, self.titles_mastertabs, nr_points)
         norm_data = self.calc.calculate_all(norm_points, self.titles_mastertabs, nr_points)
         
+        """Create window"""
         window = Tk()
         window.grid()
         temp1 = self.tkvar.get()
-    
         window.title('Grafiek = {}, norm = {}, nr points = {}'.format(temp1, self.norm_file, nr_points))
-
-
-        
         
         mastertabs = ttk.Notebook(window)
   
@@ -367,7 +350,7 @@ class Gui:
         a = fig.add_subplot(111)
        
         line1 = a.plot(x, y,color='blue', label='Data')
-        line2 = a.plot(x, ys, color='orange', label='Apply spline')
+        line2 = a.plot(x, ys, color='orange', label='Apply spline on Data')
         line3 = a.plot(xn, yn, color='red', label='Norm')
         
         a.set_title (title, fontsize=16)

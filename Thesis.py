@@ -100,6 +100,36 @@ class Calculations:
             data_list.append(data)
         return data_list
     
+    #Scale function a onto coordinates of function b
+    def scale(self, a, b):
+        x_last_b = 100   
+        if len(b) > 1:
+            last = len(b) - 1
+            x_last_b = b[last][0]
+            
+        last = len(a) - 1
+        x_last_a = a[last][0]
+        
+        scale = x_last_b / x_last_a 
+     
+        
+        for i in range(len(a)):
+            a[i][0] *= scale
+            a[i][1] *= scale
+            
+        return a
+        
+        
+    def translate_to_origin(self, points):
+        x0 = points[0][0]
+        y0 = points[0][1]
+        
+        for i in range(len(points)):
+            points[i][0] -= x0
+            points[i][1] -= y0
+            
+        return points
+        
 
     def reduce_points(self, pixel_coords, nr_points):
         points = []
