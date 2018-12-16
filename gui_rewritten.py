@@ -10,6 +10,7 @@ from matplotlib.figure import Figure
 import os
 import re
 from scipy.interpolate import UnivariateSpline
+
 #https://stackoverflow.com/questions/31440167/placing-plot-on-tkinter-main-window-in-python
 #https://pythonprogramming.net/how-to-embed-matplotlib-graph-tkinter-gui/
 #Drawing graphs https://www.python-course.eu/tkinter_events_binds.php
@@ -49,6 +50,7 @@ class Gui:
         self.tkvar = StringVar()
         self.tk_norm = StringVar()
         self.tk_scale = StringVar()
+        self.tk_scale_to_y = StringVar()
         self.scale = IntVar()
         self.popupMenu = None
         self.popupMenu_norm = None
@@ -57,7 +59,8 @@ class Gui:
         # Dictionary with options
         self.choices = {'0'}
         self.choices_norm = {'0'}
-        self.choices_scale = {'data to norm', 'norm to data', 'x = 100'}
+        self.choices_scale = {'data to norm', 'norm to data', '100'}
+        self.choices_scale_to_y = {'X', 'X and Y'}
         
         self.main_menu()
         
@@ -106,13 +109,18 @@ class Gui:
         menu2.grid(row=1, sticky=N+E+S+W)
         
         #Scale checkbox
-        self.tk_scale.set('x = 100')
+        self.tk_scale.set('100')
         self.scale.set(0)
         Checkbutton(menu2, text="Scaling", variable=self.scale, bg="spring green").grid(row=0, sticky=W)
         popupMenu_scale = OptionMenu(menu2, self.tk_scale, *self.choices_scale)
         Label(menu2, bg="spring green", text="Scale to: ").grid(row=0, column=1, sticky=N+E+S+W)
         popupMenu_scale.config(bg="white")
         popupMenu_scale.grid(row=0, column=3)
+        
+        self.tk_scale_to_y.set('X')
+        popupMenu_scale_to_y = OptionMenu(menu2, self.tk_scale_to_y, *self.choices_scale_to_y)
+        popupMenu_scale_to_y.config(bg="white")
+        popupMenu_scale_to_y.grid(row=0, column=2)
         
         #Straight line checkbox
         self.tk_lines.set(0)
@@ -166,15 +174,27 @@ class Gui:
         
         #Scale functions to different coordinate system
         scaling_method = self.tk_scale.get()
+        scale_y = self.tk_scale_to_y.get()
         print(self.scale.get())
         if self.scale.get() == 1:
-            if scaling_method == 'data to norm':
-                self.raw_points = self.calc.scale(self.raw_points, norm_points)
-            elif scaling_method == 'norm to data':
-                norm_points = self.calc.scale(norm_points, self.raw_points)
-            else: #scale to x=100
-                self.raw_points = self.calc.scale(self.raw_points, [0])
-                norm_points = self.calc.scale(norm_points, [0])
+            if scale_y == 'X':
+                if scaling_method == 'data to norm':
+                    self.raw_points = self.calc.scale(self.raw_points, norm_points)
+                elif scaling_method == 'norm to data':
+                    norm_points = self.calc.scale(norm_points, self.raw_points)
+                else: #scale to x=100
+                    self.raw_points = self.calc.scale(self.raw_points, [0])
+                    norm_points = self.calc.scale(norm_points, [0])
+            else:
+                if scaling_method == 'data to norm':
+                    self.raw_points = self.calc.scale(self.raw_points, norm_points, True)
+                elif scaling_method == 'norm to data':
+                    norm_points = self.calc.scale(norm_points, self.raw_points, True)
+                else: #scale to x=100
+                    self.raw_points = self.calc.scale(self.raw_points, [0], True)
+                    norm_points = self.calc.scale(norm_points, [0], True)
+                
+                
                 
         #Calculations
         self.raw_data = self.calc.calculate_all(self.raw_points, self.titles_mastertabs, nr_points)

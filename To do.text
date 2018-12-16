@@ -39,6 +39,12 @@ Aplpy straight line recognition:
     Do this by determining the max deviation a line piece can have such that it is still considered a straight line
     
     Simplest implen is to simply draw a straight
+    De distance between Y=0 and p is the????
+    The surface means ?????
+    This amount of curve generated in a long timespan could mean straight line or slight curve,
+    The more invection points in this area, the bigger the chance of user meaning straight line will be.
+    if its 1 convection point, it can be seen as a transition phase
+    if its 2, it might be an outlier 
 
 apply structure recognition (finds if desired pattern can be created from surface areas):
     disregard straight lines to a certain extent

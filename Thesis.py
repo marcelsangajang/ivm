@@ -16,6 +16,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import tkinter
 from scipy.interpolate import UnivariateSpline
+import itertools
 
 #import gui
 
@@ -101,23 +102,48 @@ class Calculations:
         return data_list
     
     #Scale function a onto coordinates of function b
-    def scale(self, a, b):
-        x_last_b = 100   
-        if len(b) > 1:
-            last = len(b) - 1
-            x_last_b = b[last][0]
-            
-        last = len(a) - 1
-        x_last_a = a[last][0]
+    def scale(self, a, b, y_scale = False):
         
-        scale = x_last_b / x_last_a 
-     
-        
-        for i in range(len(a)):
-            a[i][0] *= scale
-            a[i][1] *= scale
+        if y_scale == False:
+            x_last_b = 100   
+            if len(b) > 1:
+                last = len(b) - 1
+                x_last_b = b[last][0]
+                
+            last = len(a) - 1
+            x_last_a = a[last][0]
             
+            scale = x_last_b / x_last_a 
+         
+            
+            for i in range(len(a)):
+                a[i][0] *= scale
+                a[i][1] *= scale
+                
+          
+        else:
+            x_last_b = 100   
+            y_last_b = 100
+            
+            if len(b) > 1:
+                last = len(b) - 1
+                x_last_b = b[last][0]
+                y_last_b = b[last][1]
+           
+            last = len(a) - 1
+            x_last_a = a[last][0]
+            y_last_a = a[last][1]
+            
+            scale_x = x_last_b / x_last_a 
+            scale_y = y_last_b / y_last_a
+         
+            
+            for i in range(len(a)):
+                a[i][0] *= scale_x
+                a[i][1] *= scale_y
+                
         return a
+            
         
         
     def translate_to_origin(self, points):
@@ -211,6 +237,11 @@ class Calculations:
         
             
         string = '--- Pattern Analysis ---\n'
+        #Adds end points to the behaviour array
+        function_behaviour.append(['END', len(x_list) - 1])
+        norm_behaviour.append(['END', len(norm_x) - 1])
+        
+        #Exact pattern match
         if pattern_match == 1:
             #Pattern matches, Check to see if length of found surfaces are close enough, compare surface distributions, compare surface shapes (rc3)
             #Check inner proporions:
@@ -222,8 +253,6 @@ class Calculations:
             string += 'Pattern: Perfect match, comparing lengths of subgraphs...\n'
             
             #Add index of Xcoord of last element, so last subgraph length can be computed
-            function_behaviour.append(['END', len(x_list) - 1])
-            norm_behaviour.append(['END', len(norm_x) - 1])
             l = []
             ln = []
             #Finds the length of each subgraph 
@@ -238,15 +267,9 @@ class Calculations:
         else:
             #Pattern doesnt match, investigate further if there is still a possible match
             string += 'Pattern: No match, analysing further...\n'
-        
-        
-        
-        
-        
-        
-        
-        
-
+            
+            
+            
         concave = str(100* round(surface_data[1] / surface_data[0], 4)) #percentage of surface < 0
         convex = str(100* round(surface_data[2] / surface_data[0], 4))  #percentage of surface > 0
         norm_concave = str(100* round(surface_data_norm[1] / surface_data_norm[0], 4)) #percentage of surface < 0
@@ -256,28 +279,58 @@ class Calculations:
         max_difference = 10
         oordeel = string
         if difference < max_difference:
-            oordeel += "--- Surface distribution: CORRECT ---\n Graph: Concave = {}%, Convex = {}%\n Norm: Concave = {}%, Convex = {}%\n Absolute difference = {}%, limit = {}%\n".format(concave, convex, norm_concave, norm_convex, difference, max_difference)
+            string += "--- Surface distribution: CORRECT ---\n Graph: Concave = {}%, Convex = {}%\n Norm: Concave = {}%, Convex = {}%\n Absolute difference = {}%, limit = {}%\n".format(concave, convex, norm_concave, norm_convex, difference, max_difference)
         else:
-            oordeel += "--- Surface distribution: INCORRECT ---\n Graph: Concave = {}%, Convex = {}%\n Norm: Concave = {}%, Convex = {}%\n  Absolute difference = {}%, limit = {}%\n".format(concave, convex, norm_concave, norm_convex, difference, max_difference)
+            string += "--- Surface distribution: INCORRECT ---\n Graph: Concave = {}%, Convex = {}%\n Norm: Concave = {}%, Convex = {}%\n  Absolute difference = {}%, limit = {}%\n".format(concave, convex, norm_concave, norm_convex, difference, max_difference)
+            
+        oordeel = self.assemble_oordeel(string, function_behaviour, norm_behaviour, x_list, norm_x)
+  
         
-            
-        if len(norm_behaviour) != len(function_behaviour):
-            oordeel += "--- Structure f(x): INCORRECT ---\n Number of surfaces = {}, norm = {}\n".format(len(function_behaviour), len(norm_behaviour))
-            return oordeel
-            
-        decision = 0
-        for i in range(len(function_behaviour)):
-            if function_behaviour[i] != norm_behaviour[i]:
-                decision = 1
-                break
-            
-        if decision == 0:
-            oordeel += "--- Structure f(x): CORRECT ---\n Number of surfaces = {}, norm = {}\n We found {}\n norm = {}\n".format(len(function_behaviour), len(norm_behaviour), function_behaviour, norm_behaviour)
-        else:
-            oordeel += "--- Structure f(x): INCORRECT ---\n Number of surfaces = {}, norm = {}\n We found {}\n norm = {}\n".format(len(function_behaviour), len(norm_behaviour), function_behaviour, norm_behaviour)
-            
-            
         return oordeel
+        
+    def assemble_oordeel(self, oordeel, function_behaviour, norm_behaviour, x, norm_x):
+        longest = max(len(function_behaviour), len(norm_behaviour))
+   
+       
+         
+        left_x = ''
+        right_x = ''
+        direction = ''
+        oordeel += '\n--- BEHAVIOURS F(X) and NORM ---\n'
+        oordeel += "Number of behaviours: f(x) = {}, norm = {}\n".format(len(function_behaviour) -1, len(norm_behaviour) -1)
+        oordeel += '\nformatted as:\n'
+        oordeel += '    F(X)    -------    NORM\n'
+        oordeel += '(i, left_x) direction (i, right_x)\n\n'
+        
+        
+        #iterate to len - 1 because last point is END statement
+        for i in range(longest - 1):
+            if i < len(function_behaviour) -1:
+                direction = function_behaviour[i][0]
+                index = function_behaviour[i][1]
+                index_next = function_behaviour[i+1][1]
+                left_x = x[index]
+                right_x = x[index_next]
+                oordeel += ' ({}, {}), {}, ({}, {}) ---'.format(index, left_x, direction, index_next, right_x)
+            else:
+                oordeel += '       NONE             ----- '
+                
+            if i < len(norm_behaviour) -1:
+                direction = norm_behaviour[i][0]
+                index = norm_behaviour[i][1]
+                index_next = norm_behaviour[i+1][1]
+                left_x = norm_x[index]
+                right_x = norm_x[index_next]
+                oordeel += '({}, {}), {}, ({}, {})\n'.format(index, left_x, direction, index_next, right_x)
+            else:
+                oordeel += '          NONE              \n'
+            
+            
+            
+        oordeel += '\n\n'
+        return oordeel
+            
+
     
     #Returns list of bahaviour, each element contains: ['behaviour', left x, right x]
     """Note: When detecting a transition from negative to positive RC2, the next point is taken as start of convex area. 

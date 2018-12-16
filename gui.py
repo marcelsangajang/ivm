@@ -10,6 +10,7 @@ from matplotlib.figure import Figure
 import os
 import re
 from scipy.interpolate import UnivariateSpline
+
 #https://stackoverflow.com/questions/31440167/placing-plot-on-tkinter-main-window-in-python
 #https://pythonprogramming.net/how-to-embed-matplotlib-graph-tkinter-gui/
 #Drawing graphs https://www.python-course.eu/tkinter_events_binds.php
@@ -31,135 +32,128 @@ class Gui:
         self.data = [] #Contains 1 vector: [x, y, rc1, rc2], based on the raw points read from file
         self.w_canvas = 500
         self.h_canvas = 500
-        self.inp = None
+
         self.titles_table = ['Index', 'X', 'Y', 'RC1', 'RC2']
         self.titles_tabs = ['f(x)', 'RC1', 'RC2']
         self.titles_mastertabs = ['Raw data', 'After splining f(x)', 'After splining RC1', 'After splining f(x) and RC1', 'After splining f(x), RC1 and RC2']
         self.table_h = 20
         self.table_w = len(self.titles_table)
         
-     
-        self.ratio_table = []
-        self.answer_table = []
         #main window
         self.window = root
         self.window.grid()
-        
-
-        
+               
         self.sizex = 1400
         self.sizey = 1000
-        #self.window.geometry("%dx%d" % (self.sizex, self.sizey))
- 
+        
+        #Main menu settings
+        self.tkvar = StringVar()
+        self.tk_norm = StringVar()
+        self.tk_scale = StringVar()
+        self.tk_scale_to_y = StringVar()
+        self.scale = IntVar()
+        self.popupMenu = None
+        self.popupMenu_norm = None
+        self.tk_lines = IntVar()
+        self.tk_lines_value = StringVar()
+        # Dictionary with options
+        self.choices = {'0'}
+        self.choices_norm = {'0'}
+        self.choices_scale = {'data to norm', 'norm to data', '100'}
+        self.choices_scale_to_y = {'X', 'X and Y'}
+        
+        self.main_menu()
+        
+    def main_menu(self):
         """Frame for menu menu"""
-
-        self.menu = Frame(self.window, borderwidth=1, relief="solid")
-        self.menu.grid(column=0, sticky=N+E+W)
+        menu = Frame(self.window, borderwidth=1, relief="solid")
+        menu.grid(column=0, sticky=N+E+W)
         
         
         """menu 1"""
-        self.menu1 = Frame(self.menu, bg="spring green", borderwidth=1, relief="solid")
-        self.menu1.grid(row=0, sticky=N+E+S+W)
+        menu1 = Frame(menu, bg="spring green", borderwidth=1, relief="solid")
+        menu1.grid(row=0, sticky=N+E+S+W)
                 
         #self.menu_label1 = Label(self.menu1, bg="spring green", text="Input options:")
         #self.menu_label1.grid(row=0, column=0, sticky=N+E+S+W)
         
-        self.menu_label2 = Label(self.menu1, bg="spring green", text="Choose graph")
-        self.menu_label2.grid(row=2, column=0, sticky=N+E+S+W)
-        
-                # Create a Tkinter variable
-        self.tkvar = StringVar(self.menu1)
-        self.tk_norm = StringVar(self.menu1)
-        # Dictionary with options
-        self.choices = {'0'}
-        self.choices_norm = {'0'}
-        
+        menu_label2 = Label(menu1, bg="spring green", text="Choose graph")
+        menu_label2.grid(row=2, column=0, sticky=N+E+S+W)
+                
         self.tkvar.set('0') # set the default option
         self.tk_norm.set('0')
-        self.popupMenu = OptionMenu(self.menu1, self.tkvar, *self.choices)
-        Label(self.menu1, bg="spring green", text="Choose function").grid(row=2, column=0, sticky=N+E+S+W)
+        self.popupMenu = OptionMenu(menu1, self.tkvar, *self.choices)
+        Label(menu1, bg="spring green", text="Choose function").grid(row=2, column=0, sticky=N+E+S+W)
+        self.popupMenu.config(bg="white")
         self.popupMenu.grid(row=2, column=1)
         
-        self.popupMenu_norm = OptionMenu(self.menu1, self.tk_norm, *self.choices_norm)
-        Label(self.menu1, bg="spring green", text="Choose norm").grid(row=3, column=0, sticky=N+E+S+W)
+        self.popupMenu_norm = OptionMenu(menu1, self.tk_norm, *self.choices_norm)
+        Label(menu1, bg="spring green", text="Choose norm").grid(row=3, column=0, sticky=N+E+S+W)
+        self.popupMenu_norm.config(bg="white")
         self.popupMenu_norm.grid(row=3, column=1)
         
-        Label(self.menu1, bg="spring green", text="Choose nr of points").grid(row=4, column=0, sticky=N+E+S+W)
-        self.nr_points = Entry(self.menu1)
+        Label(menu1, bg="spring green", text="Choose nr of points").grid(row=4, column=0, sticky=N+E+S+W)
+        self.nr_points = Entry(menu1)
         self.nr_points.grid(row=4, column=1, sticky=N+E+S+W)
         
         # on change dropdown value
         def change_dropdown(*args):
             self.norm_file = self.tk_norm.get()
             
-        
         # link function to change dropdown
         #self.tkvar.trace('w', change_dropdown)
         self.tk_norm.trace('w', change_dropdown)
         self.update_filelist()
         
-        self.menu2 = Frame(self.menu, bg="spring green", borderwidth=1, relief="solid")
-        self.menu2.grid(row=1, sticky=N+E+S+W)
-        self.scale = IntVar(self.menu2)
+        menu2 = Frame(menu, bg="spring green", borderwidth=1, relief="solid")
+        menu2.grid(row=1, sticky=N+E+S+W)
+        
+        #Scale checkbox
+        self.tk_scale.set('100')
         self.scale.set(0)
-        Checkbutton(self.menu2, text="Scaling", variable=self.scale).grid(row=0, sticky=W)
-
-        self.tk_scale = StringVar(self.menu2)
-        self.tk_scale.set('x = 100')
-        self.choices_scale = {'data to norm', 'norm to data', 'x = 100'}
-        self.popupMenu_scale = OptionMenu(self.menu2, self.tk_scale, *self.choices_scale)
-        Label(self.menu2, bg="spring green", text="Scale to: ").grid(row=0, column=1, sticky=N+E+S+W)
-        self.popupMenu_scale.grid(row=0, column=3)
+        Checkbutton(menu2, text="Scaling", variable=self.scale, bg="spring green").grid(row=0, sticky=W)
+        popupMenu_scale = OptionMenu(menu2, self.tk_scale, *self.choices_scale)
+        Label(menu2, bg="spring green", text="Scale to: ").grid(row=0, column=1, sticky=N+E+S+W)
+        popupMenu_scale.config(bg="white")
+        popupMenu_scale.grid(row=0, column=3)
         
-        self.input_button = Button(self.menu1, text="Load graph", command=self.load_graph, bg='green3')
-        self.input_button.grid(row = 5, columnspan = 2, sticky=N+E+S+W)
+        self.tk_scale_to_y.set('X')
+        popupMenu_scale_to_y = OptionMenu(menu2, self.tk_scale_to_y, *self.choices_scale_to_y)
+        popupMenu_scale_to_y.config(bg="white")
+        popupMenu_scale_to_y.grid(row=0, column=2)
         
-        self.input_button3 = Button(self.menu1, text="Draw graph", command=self.drawing, bg='mediumorchid3')
-        self.input_button3.grid(row=6, columnspan = 2, sticky=W+N+S+E)
-        
-        
-    
-    def update_filelist(self):
-        files = []
-        tempfiles = []
-        self.choices.clear()
-        self.choices_norm.clear()
-        
-                #Find all txt files, creates a non-taken name
-        for file in os.listdir(self.filepath):
-            if file.endswith(".txt"):
-                temp = re.sub("\D", "", file)
-                if len(temp) > 0:
-                    files.append(temp)
-                    tempfiles.append(int(temp))
-        #Find files
-        self.file_list = files
-        tempfiles.sort()
+        #Straight line checkbox
+        self.tk_lines.set(0)
+        Checkbutton(menu2, text="Detect straight lines:", variable=self.tk_lines, bg="spring green").grid(row=1, sticky=W)
+        Label(menu2, bg="spring green", text="(-p < y < p), p=").grid(row=1, column=1, sticky=N+E+S+W)
+        self.tk_lines_value = Entry(menu2)
+        self.tk_lines_value.grid(row = 1, column=3)
    
-        for i in range(len(tempfiles)):
-            self.choices.update({tempfiles[i]})
-            self.choices_norm.update({tempfiles[i]})
-            
-      
-        menu = self.popupMenu["menu"]
-        menu.delete(0, "end")
-        for string in self.choices:
-            menu.add_command(label=string, 
-                             command=lambda value=string: self.tkvar.set(value))
-            
-        menu = self.popupMenu_norm["menu"]
-        menu.delete(0, "end")
-        for string in self.choices_norm:
-            menu.add_command(label=string, 
-                             command=lambda value=string: self.tk_norm.set(value))
-            
-      
+        
+        input_button = Button(menu1, text="Load graph", command=self.load_graph, bg='green3')
+        input_button.grid(row = 5, columnspan = 2, sticky=N+E+S+W)
+        
+        input_button3 = Button(menu1, text="Draw graph", command=self.drawing, bg='mediumorchid3')
+        input_button3.grid(row=6, columnspan = 2, sticky=W+N+S+E)
+  
+    #Functionality, assembles output for user together   
     def load_graph(self):
-        """Preperations and checks"""
+        #Preperations and checks
         self.filename = self.tkvar.get()
         self.raw_points = self.read_graph(self.filename) 
         norm_points = self.read_graph(self.norm_file)
         nr_points = self.nr_points.get()
+        
+        if self.tk_lines.get() == 1:
+            p = self.tk_lines_value.get()
+            p = re.sub('[^0-9,.]', '', p)
+        else:
+            p = '0.05'
+            
+        if len(p) == 0:
+            print('No p value entered, using p = 0.05')
+            p = '0.05'
+            
         temp = re.sub("\D", "", nr_points)
         
         if len(temp) == 0:
@@ -174,25 +168,34 @@ class Gui:
             print('Cant use N > points in raw data, using N = 10')
             nr_points = 10
 
-
-
         #Translate to origin
         self.raw_points = self.calc.translate_to_origin(self.raw_points)
         norm_points = self.calc.translate_to_origin(norm_points)
         
         #Scale functions to different coordinate system
         scaling_method = self.tk_scale.get()
+        scale_y = self.tk_scale_to_y.get()
         print(self.scale.get())
         if self.scale.get() == 1:
-            if scaling_method == 'data to norm':
-                self.raw_points = self.calc.scale(self.raw_points, norm_points)
-            elif scaling_method == 'norm to data':
-                norm_points = self.calc.scale(norm_points, self.raw_points)
-            else: #scale to x=100
-                self.raw_points = self.calc.scale(self.raw_points, [0])
-                norm_points = self.calc.scale(norm_points, [0])
+            if scale_y == 'X':
+                if scaling_method == 'data to norm':
+                    self.raw_points = self.calc.scale(self.raw_points, norm_points)
+                elif scaling_method == 'norm to data':
+                    norm_points = self.calc.scale(norm_points, self.raw_points)
+                else: #scale to x=100
+                    self.raw_points = self.calc.scale(self.raw_points, [0])
+                    norm_points = self.calc.scale(norm_points, [0])
+            else:
+                if scaling_method == 'data to norm':
+                    self.raw_points = self.calc.scale(self.raw_points, norm_points, True)
+                elif scaling_method == 'norm to data':
+                    norm_points = self.calc.scale(norm_points, self.raw_points, True)
+                else: #scale to x=100
+                    self.raw_points = self.calc.scale(self.raw_points, [0], True)
+                    norm_points = self.calc.scale(norm_points, [0], True)
                 
-        
+                
+                
         #Calculations
         self.raw_data = self.calc.calculate_all(self.raw_points, self.titles_mastertabs, nr_points)
         norm_data = self.calc.calculate_all(norm_points, self.titles_mastertabs, nr_points)
@@ -242,37 +245,50 @@ class Gui:
             
             surface_data = self.data[len(self.data)-1]
             surface_data_norm = list(norm[len(norm) - 1])
-            string = self.calc.beoordeel(self.data[0], self.data[3], norm[0], norm[3], surface_data, surface_data_norm)
+            string = self.calc.beoordeel(self.data[0], self.data[3], norm[0], norm[3], surface_data, surface_data_norm, p)
             T.insert(END, string)
             
             #add tab
             mastertabs.add(tab, text=self.titles_mastertabs[i])    
         mastertabs.grid(sticky=N)  # grid to make visible
 
-#        self.update_graphs()
-        """
-    def create_menu(self, master):
-        btns = []
+    #Updates the popup menus choices (which are files stored in map ./graph/)
+    def update_filelist(self):
         files = []
-        #Find all txt files, creates a non-taken name
+        tempfiles = []
+        self.choices.clear()
+        self.choices_norm.clear()
+        
+                #Find all txt files, creates a non-taken name
         for file in os.listdir(self.filepath):
             if file.endswith(".txt"):
                 temp = re.sub("\D", "", file)
                 if len(temp) > 0:
-                    files.append(int(temp))
+                    files.append(temp)
+                    tempfiles.append(int(temp))
         #Find files
-        self.files = files
-        
-        #Create buttons
-        for i in range(len(files)):
-            #Create graph choie menu
-            btn = Button(master, text='Graph '+str(files[i]), command=self.load_graph(self.files[i]), bg='PaleTurquoise2')
-            btn.grid(sticky=W+E+N+S)
-            btns.append(btn)
-        return btns
-    """
+        self.file_list = files
+        tempfiles.sort()
+   
+        for i in range(len(tempfiles)):
+            self.choices.update({tempfiles[i]})
+            self.choices_norm.update({tempfiles[i]})
+            
+      
+        menu = self.popupMenu["menu"]
+        menu.delete(0, "end")
+        for string in self.choices:
+            menu.add_command(label=string, 
+                             command=lambda value=string: self.tkvar.set(value))
+            
+        menu = self.popupMenu_norm["menu"]
+        menu.delete(0, "end")
+        for string in self.choices_norm:
+            menu.add_command(label=string, 
+                             command=lambda value=string: self.tk_norm.set(value))
+            
     """Table"""
-    
+    #Creats drawing widget where user can input graph
     def drawing(self):
         """Drawings"""        
         root = Tk()
@@ -320,6 +336,7 @@ class Gui:
         btn = Button(root, text="Save", command=clicked3, bg='medium spring green')
         btn.grid(row=1, sticky=N+E+S)
     
+    #Creates widget containing graphs stored in tabs
     def update_graphs(self, root, x, y_coords, x_norm, y_coords_norm, titles):
         #Connect to root
         tab_control = ttk.Notebook(root)
@@ -340,9 +357,8 @@ class Gui:
             tab_control.add(tab, text=titles[i])    
         tab_control.grid()  # grid to make visible
         
-    def plot(self, root, x, y, xn, yn, title):
-
-            
+    #Plots graph of a function, and norm a function
+    def plot(self, root, x, y, xn, yn, title):   
         s = UnivariateSpline(x, y, s=1)
         ys = s(x)
 
@@ -360,9 +376,10 @@ class Gui:
         a.grid(True)
         a.axhline(y=0, color='k')
         a.axvline(x=0, color='k')
-        leg = a.legend(loc='upper left', fancybox=True, shadow=True)
         
-        
+        #Legend and graph hiding functionality
+        leg = a.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
+          fancybox=True, shadow=True, ncol=5)
 
         lines = [line1, line2, line3]
         lined = dict()
@@ -370,10 +387,9 @@ class Gui:
         for legline, origline in zip(leg.get_lines(), lines):
             legline.set_picker(5)  # 5 pts tolerance
             lined[legline] = origline
-            if i == 1:
+            if i != 0:
                 origline[0].set_visible(False)
                 legline.set_alpha(0.2)
-            
             i += 1
             
         canvas = FigureCanvasTkAgg(fig, root)
@@ -399,11 +415,7 @@ class Gui:
 
         
         canvas.mpl_connect('pick_event', onpick)
-            
-
-        
-        
-      
+                  
     def save_graph(self, points_drawing):
         #rewrite format of the file
         text = str(points_drawing)
@@ -483,7 +495,6 @@ class Gui:
                             pass
                             #print('error while reading file')
      
- 
         return lines
     
 class Example(tk.Frame):
@@ -502,8 +513,6 @@ class Example(tk.Frame):
                                   tags="self.frame")
 
         self.frame.bind("<Configure>", self.onFrameConfigure)
-
-  
 
     def onFrameConfigure(self, event):
         '''Reset the scroll region to encompass the inner frame'''
@@ -535,56 +544,12 @@ class Example(tk.Frame):
                 b = Label(scrollbar, text=y, bg='white', borderwidth=1, relief="sunken")
                 b.grid(row=j+1, column=i+1, sticky=W+E+N+S)
                 
-                
-    def update_table2(self, data, answer, titles, n_size, neg_limit, total_limit):         
-        scrollbar = self.frame
-        table_w = len(data) #+1 for index column
-        table_h = len(data[0]) #+1 for title row
-        #Sets up title row
-        for i in range(len(titles)):
-            a = Label(scrollbar, text='N size = '+ str(n_size))
-            a.grid(row=0, column=0, sticky=N+E+S+W)
-            
-            a = Label(scrollbar, text='B/S ratio = ' + str(neg_limit))
-            a.grid(row=0, column=1, sticky=N+E+S+W)
-            
-            a = Label(scrollbar, text='Opp ratio = ' + str(total_limit))
-            a.grid(row=0, column=2, sticky=N+E+S+W)
-            
-            b = Label(scrollbar, text=titles[i], bg='medium spring green')
-            b.grid(row=1, column=i, sticky=W+E+N+S)
-           # table_conten[i].append(b)
-        
-        #Sets up title column (index)
-        for i in range(table_h):
-            text1 = 'i = ' + str(i)
-            b = Label(scrollbar, text=text1, bg='white')
-            b.grid(row=i+2, column=0, sticky=W+E+N+S)
-            #table_conten[0].append(b)
-          
-        #Creates rows for Y, RC1, RC2
-        for i in range(table_w):            
-            height = len(data[i])
-            
-            for j in range(height): #Rows
-                y = round(data[i][j], 3)
-                if answer[i][j] == 'r':
-                    bg = 'white'
-                elif answer[i][j] == 'b':
-                    bg = 'orange2'
-                elif answer[i][j] == 's':
-                    bg = 'green2'
-                else:
-                    bg = 'light grey'
-                
-                b = Label(scrollbar, text=y, bg=bg, borderwidth=1, relief="sunken")
-                b.grid(row=j+2, column=i+1, sticky=W+E+N+S)
-
 if __name__ == '__main__':
     root = Tk()
     root.title('Control panel')
     g = Gui(root)
     root.mainloop()
+
  
     """ 
     def lsq(self, points):
