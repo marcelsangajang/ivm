@@ -23,7 +23,7 @@ class Calculations:
     def __init__(self):
         pass
     
-    def calculate_all(self, points, titles, nr_points = 50):
+    def calculate_all(self, points, titles, nr_points):
         data_list = []
         
         #Creates array for X and array for Y
@@ -70,7 +70,7 @@ class Calculations:
             elif i == 1:
                 s = UnivariateSpline(x, y, s=1)
                 ys = s(x)
-     
+                y = ys
                 rc1_list = self.rc_list(x, ys)
                 rc2_list = self.rc_list(x, rc1_list)      
             #Calc XY, spline RC1, calc RC2
@@ -192,9 +192,60 @@ class Calculations:
              
         return oordeel1, oordeel2
         
-    def beoordeel(self, x_list, rc2_list, norm_x, norm_rc2, surface_data, surface_data_norm):
-        function_behaviour = self.find_function_behaviour(x_list, rc2_list)
-        norm_behaviour = self.find_function_behaviour(norm_x, norm_rc2)
+    def beoordeel(self, x_list, rc2_list, norm_x, norm_rc2, surface_data, surface_data_norm, p):
+        #Get sequance of behaviour
+        method = 'simple'
+        function_behaviour = self.find_function_behaviour(x_list, rc2_list, method, p)
+        norm_behaviour = self.find_function_behaviour(norm_x, norm_rc2, method, p)
+        
+        #Check to see if desired pattern matched exactly
+        """ WHEN DOING SURFACE CALCULATIONS, DATA FROM STRAIGHT LINE HAS BEEN CUT OUT"""
+        pattern_match = 0
+        if len(function_behaviour) == len(norm_behaviour):
+            pattern_match = 1
+            #Check if the behaviour sequence is the same
+            for i in range(len(function_behaviour)):
+                if function_behaviour[i][0] != norm_behaviour[i][0]:
+                    pattern_match = 0
+                    break
+        
+            
+        string = '--- Pattern Analysis ---\n'
+        if pattern_match == 1:
+            #Pattern matches, Check to see if length of found surfaces are close enough, compare surface distributions, compare surface shapes (rc3)
+            #Check inner proporions:
+            #Length of subgraphs correct? => sais something about knowing when a directional change takes place in the vase, and correctly drawing it in the right part of the graph
+            #Inner surface distribution correct (same proportions as norm)? => 
+            #Total surface distribution close to norm? =>
+            #Shape of RC2 correct? => Student recognizes when walls vase are getting smaller, is this happening increasingly or decreasingly
+            #All of the above correct? perfect match
+            string += 'Pattern: Perfect match, comparing lengths of subgraphs...\n'
+            
+            #Add index of Xcoord of last element, so last subgraph length can be computed
+            function_behaviour.append(['END', len(x_list) - 1])
+            norm_behaviour.append(['END', len(norm_x) - 1])
+            l = []
+            ln = []
+            #Finds the length of each subgraph 
+            for i in range(len(function_behaviour)):
+                length = 1#function_behaviour[i+1][1] - function_behaviour[i][1]
+                l.append(length)
+                length_norm = 1#norm_behaviour[i+1][1] - norm_behaviour[i][1]
+                ln.append(length_norm)
+                
+            #Decide if the lengths are close enough
+            
+        else:
+            #Pattern doesnt match, investigate further if there is still a possible match
+            string += 'Pattern: No match, analysing further...\n'
+        
+        
+        
+        
+        
+        
+        
+        
 
         concave = str(100* round(surface_data[1] / surface_data[0], 4)) #percentage of surface < 0
         convex = str(100* round(surface_data[2] / surface_data[0], 4))  #percentage of surface > 0
@@ -203,7 +254,7 @@ class Calculations:
         
         difference = abs(float(concave) - float(norm_concave))
         max_difference = 10
-        oordeel = ''
+        oordeel = string
         if difference < max_difference:
             oordeel += "--- Surface distribution: CORRECT ---\n Graph: Concave = {}%, Convex = {}%\n Norm: Concave = {}%, Convex = {}%\n Absolute difference = {}%, limit = {}%\n".format(concave, convex, norm_concave, norm_convex, difference, max_difference)
         else:
@@ -228,31 +279,61 @@ class Calculations:
             
         return oordeel
     
-    def find_function_behaviour(self, x_list, rc2_list):
-        if rc2_list[0] < 0:
-            richting = 'concave'
-        else:
-            richting = 'convex'
-            
-        richting_list = [richting]
-        rx = [x_list[0]]
-        ry = [rc2_list[0]]
-        #Finds every surface 
-        for i in range(len(rc2_list)):
-            #Change in direction from wider to smaller
-            if richting == 'concave':
-                if rc2_list[i] >= 0:
-                    richting = 'convex'
-                    richting_list.append(richting)
-                    rx.append(x_list[i])
-                    ry.append(rc2_list[i])
-            else:
-                if rc2_list[i] < 0:
+    #Returns list of bahaviour, each element contains: ['behaviour', left x, right x]
+    """Note: When detecting a transition from negative to positive RC2, the next point is taken as start of convex area. 
+    No interpolation method is used to determine exact coord, this is an estimation"""
+    def find_function_behaviour(self, x_list, rc2_list, method, p):
+        richting_list = []
+        method = None
+        #Simply considers an Y value that lies between -p < Y < p as a straight line
+        if method == 'simple':
+            #if -p < Y < p then point is close enough to Y=0 
+            p = float(p)
+            #Default p: Y = 0.05 and Y = -0.05
+            if rc2_list[0] - p < 0: #Y < -p
+                richting = 'concave'
+            elif rc2_list[0] - p > 0: #Y > p
+                richting = 'convex'
+            else: #-p < Y < p
+                richting = 'straight' #-p < Y < p
+                
+            #Add first element
+            richting_list.append([richting, 0])
+          
+            for i in range(len(rc2_list)):
+                if rc2_list[i] - p < 0: #Y < -p
                     richting = 'concave'
-                    richting_list.append(richting)
-                    rx.append(x_list[i])
-                    ry.append(rc2_list[i])
+                elif rc2_list[i] - p > 0: #Y > p
+                    richting = 'convex'
+                else: #-p < Y < p
+                    richting = 'straight' # -p < Y < p
+                    
+                #Compares direction to last known direction
+                if richting == richting_list[-1][0]:
+                    continue
+                
+                richting_list.append([richting, i])
+        #No straight lines, looks only at concave and convex behaviour
+        else:
+            if rc2_list[0] < 0: #Y < -p
+                richting = 'concave'
+            else: #rc2_list[0] > 0: #Y > p
+                richting = 'convex'
+            
+            richting_list.append([richting, 0])
+            for i in range(len(rc2_list)):
+                if rc2_list[i] < 0: #Y < -p
+                    richting = 'concave'
+                else: #rc2_list[i] > 0: #Y > p
+                    richting = 'convex'
+                  
+                #Compares direction to last known direction
+                if richting == richting_list[-1][0]:
+                    continue
+                
+                richting_list.append([richting, i])
         
+        #returns ['richting', index of Coord] 
         return richting_list
     
     def surface_list(self, rc2_list):

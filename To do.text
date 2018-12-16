@@ -1,13 +1,13 @@
------- immediate improvements-----------
+------Theory--------
+Sum of squares, least squares, max deviation metrics: https://stackoverflow.com/questions/6723157/how-to-compare-two-curves-arrays-of-points
 
-Check what univariate spline returns:
-xs and rc1_list are both length 49
-                s = UnivariateSpline(xs, rc1_list, s=1)
-                ys = s(x)
-                rc1_list = ys
-now rc1_list is length 50
+Find out which curve fit to use (which is best? depends on number of points?)
 
-Add number of points to main interface
+V- Research how to scale two graphs on same coordinate system:
+
+V-Translate both functions to origin
+V- Enlarge smaller one, or shrink bigger according to x axis, then scale y axis accordingly
+
 
 
 
@@ -16,6 +16,13 @@ Add number of points to main interface
 
 
 ---data alanlysis---------
+Check what univariate spline returns:
+    xs and rc1_list are both length 49
+                    s = UnivariateSpline(xs, rc1_list, s=1)
+                    ys = s(x)
+                    rc1_list = ys
+    now rc1_list is length 50
+
 Check if calculations are correct (first RC2 is always huge compared to RC2[-1] = 0), also check last elements (they are lost when calc RC1 and RC2)
 
 Check why some drawings appear to create Asymptotes (RC2 of graph 1)
@@ -25,3 +32,20 @@ Check for other curve fitting methods other than spline
 Check to see how we are gonna fix drawing imperfections even more
 
 Recheck all calculations with low number of points to verify everything is calculated correctly
+
+Aplpy straight line recognition:
+    check y coords of function, if -p < y < p then RC2 is close enough to 0 t
+    to determine which p is proper (should be default), calculate how much avg curve can be generated per point.
+    Do this by determining the max deviation a line piece can have such that it is still considered a straight line
+    
+    Simplest implen is to simply draw a straight
+
+apply structure recognition (finds if desired pattern can be created from surface areas):
+    disregard straight lines to a certain extent
+    disregard small deviations in surface behaviour to a certain extent
+    
+Data output wrong!:
+    graph 2, norm 1, scaling to x = 100, nr points = 10:
+    
+    Scaling is niet exact naar x=100, en beide grafieken hebben andere eindlengte
+    
