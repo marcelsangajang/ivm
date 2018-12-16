@@ -219,10 +219,11 @@ class Calculations:
         return oordeel1, oordeel2
         
     def beoordeel(self, x_list, rc2_list, norm_x, norm_rc2, surface_data, surface_data_norm, p):
+        print('pppp ==== {}'.format(p))
         #Get sequance of behaviour
-        method = 'simple'
-        function_behaviour = self.find_function_behaviour(x_list, rc2_list, method, p)
-        norm_behaviour = self.find_function_behaviour(norm_x, norm_rc2, method, p)
+
+        function_behaviour = self.find_function_behaviour(x_list, rc2_list, p)
+        norm_behaviour = self.find_function_behaviour(norm_x, norm_rc2, p)
         
         #Check to see if desired pattern matched exactly
         """ WHEN DOING SURFACE CALCULATIONS, DATA FROM STRAIGHT LINE HAS BEEN CUT OUT"""
@@ -309,8 +310,8 @@ class Calculations:
                 direction = function_behaviour[i][0]
                 index = function_behaviour[i][1]
                 index_next = function_behaviour[i+1][1]
-                left_x = x[index]
-                right_x = x[index_next]
+                left_x = round(x[index], 2)
+                right_x = round(x[index_next], 2)
                 oordeel += ' ({}, {}), {}, ({}, {}) ---'.format(index, left_x, direction, index_next, right_x)
             else:
                 oordeel += '       NONE             ----- '
@@ -319,8 +320,8 @@ class Calculations:
                 direction = norm_behaviour[i][0]
                 index = norm_behaviour[i][1]
                 index_next = norm_behaviour[i+1][1]
-                left_x = norm_x[index]
-                right_x = norm_x[index_next]
+                left_x = round(norm_x[index], 2)
+                right_x = round(norm_x[index_next], 2)
                 oordeel += '({}, {}), {}, ({}, {})\n'.format(index, left_x, direction, index_next, right_x)
             else:
                 oordeel += '          NONE              \n'
@@ -335,39 +336,12 @@ class Calculations:
     #Returns list of bahaviour, each element contains: ['behaviour', left x, right x]
     """Note: When detecting a transition from negative to positive RC2, the next point is taken as start of convex area. 
     No interpolation method is used to determine exact coord, this is an estimation"""
-    def find_function_behaviour(self, x_list, rc2_list, method, p):
+    def find_function_behaviour(self, x_list, rc2_list, p):
         richting_list = []
-        method = None
-        #Simply considers an Y value that lies between -p < Y < p as a straight line
-        if method == 'simple':
-            #if -p < Y < p then point is close enough to Y=0 
-            p = float(p)
-            #Default p: Y = 0.05 and Y = -0.05
-            if rc2_list[0] - p < 0: #Y < -p
-                richting = 'concave'
-            elif rc2_list[0] - p > 0: #Y > p
-                richting = 'convex'
-            else: #-p < Y < p
-                richting = 'straight' #-p < Y < p
-                
-            #Add first element
-            richting_list.append([richting, 0])
-          
-            for i in range(len(rc2_list)):
-                if rc2_list[i] - p < 0: #Y < -p
-                    richting = 'concave'
-                elif rc2_list[i] - p > 0: #Y > p
-                    richting = 'convex'
-                else: #-p < Y < p
-                    richting = 'straight' # -p < Y < p
-                    
-                #Compares direction to last known direction
-                if richting == richting_list[-1][0]:
-                    continue
-                
-                richting_list.append([richting, i])
+        
         #No straight lines, looks only at concave and convex behaviour
-        else:
+        if p == '0':
+            print('No straight line detection')
             if rc2_list[0] < 0: #Y < -p
                 richting = 'concave'
             else: #rc2_list[0] > 0: #Y > p
@@ -387,6 +361,36 @@ class Calculations:
                 richting_list.append([richting, i])
         
         #returns ['richting', index of Coord] 
+        #Simply considers an Y value that lies between -p < Y < p as a straight line
+        else:
+            print('Straight line detection')
+            #if -p < Y < p then point is close enough to Y=0 
+            p = float(p)
+            #Default p: Y = 0.05 and Y = -0.05
+            if rc2_list[0] + p < 0: #Y < -p
+                richting = 'concave'
+            elif rc2_list[0] - p > 0: #Y > p
+                richting = 'convex'
+            else: #-p < Y < p
+                richting = 'straight' #-p < Y < p
+                
+            #Add first element
+            richting_list.append([richting, 0])
+          
+            for i in range(len(rc2_list)):
+                if rc2_list[i] + p < 0: #Y < -p
+                    richting = 'concave'
+                elif rc2_list[i] - p > 0: #Y > p
+                    richting = 'convex'
+                else: #-p < Y < p
+                    richting = 'straight' # -p < Y < p
+                    
+                #Compares direction to last known direction
+                if richting == richting_list[-1][0]:
+                    continue
+                
+                richting_list.append([richting, i])
+                
         return richting_list
     
     def surface_list(self, rc2_list):

@@ -148,11 +148,11 @@ class Gui:
             p = self.tk_lines_value.get()
             p = re.sub('[^0-9,.]', '', p)
         else:
-            p = '0.05'
+            p = '0'
             
         if len(p) == 0:
-            print('No p value entered, using p = 0.05')
-            p = '0.05'
+            print('No p value entered, using p = 0.025')
+            p = '0.025'
             
         temp = re.sub("\D", "", nr_points)
         
@@ -204,7 +204,7 @@ class Gui:
         window = Tk()
         window.grid()
         temp1 = self.tkvar.get()
-        window.title('Grafiek = {}, norm = {}, nr points = {}'.format(temp1, self.norm_file, nr_points))
+        window.title('Grafiek = {}, norm = {}, nr points = {}, p='.format(temp1, self.norm_file, nr_points))
         
         mastertabs = ttk.Notebook(window)
   
@@ -366,8 +366,25 @@ class Gui:
         a = fig.add_subplot(111)
        
         line1 = a.plot(x, y,color='blue', label='Data')
-        line2 = a.plot(x, ys, color='orange', label='Apply spline on Data')
-        line3 = a.plot(xn, yn, color='red', label='Norm')
+        line2 = a.plot(xn, yn, color='red', label='Norm')
+        line3 = a.plot(x, ys, color='darkorange', label='Apply spline on Data')
+        
+        
+        lines = [line1, line2, line3]
+        #Adds p line to rc2 graph
+        if title == 'RC2' and self.tk_lines.get() == 1:
+            p = self.tk_lines_value.get()
+            p = re.sub('[^0-9,.]', '', p)
+            print(p)
+            if len(p) == 0:
+                p = '0.025'
+                
+            p = float(p)
+            p1 = [p]*len(x)
+            p2 = [-p]*len(x)
+            line4 = a.plot(x, p1,color='orange', label='y = p')
+            line5 = a.plot(x, p2,color='orange', label='y = -p')
+            lines = [line1, line2, line3, line4, line5]
         
         a.set_title (title, fontsize=16)
         a.set_ylabel("Y", fontsize=14)
@@ -381,7 +398,7 @@ class Gui:
         leg = a.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
           fancybox=True, shadow=True, ncol=5)
 
-        lines = [line1, line2, line3]
+        
         lined = dict()
         i = 0
         for legline, origline in zip(leg.get_lines(), lines):
