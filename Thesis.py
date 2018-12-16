@@ -284,37 +284,60 @@ class Calculations:
         else:
             string += "--- Surface distribution: INCORRECT ---\n Graph: Concave = {}%, Convex = {}%\n Norm: Concave = {}%, Convex = {}%\n  Absolute difference = {}%, limit = {}%\n".format(concave, convex, norm_concave, norm_convex, difference, max_difference)
             
-        oordeel = self.assemble_oordeel(string, function_behaviour, norm_behaviour, x_list, norm_x)
+        string2 = ''
+        oordeel = self.assemble_oordeel(string2, function_behaviour, norm_behaviour, x_list, norm_x)
   
         
         return oordeel
         
     def assemble_oordeel(self, oordeel, function_behaviour, norm_behaviour, x, norm_x):
-        longest = max(len(function_behaviour), len(norm_behaviour))
+        #iterate to len - 1 because last point is END statement
+        longest = max(len(function_behaviour), len(norm_behaviour)) -1
    
        
          
         left_x = ''
         right_x = ''
         direction = ''
-        oordeel += '\n--- BEHAVIOURS F(X) and NORM ---\n'
-        oordeel += "Number of behaviours: f(x) = {}, norm = {}\n".format(len(function_behaviour) -1, len(norm_behaviour) -1)
-        oordeel += '\nformatted as:\n'
-        oordeel += '    F(X)    -------    NORM\n'
-        oordeel += '(i, left_x) direction (i, right_x)\n\n'
+        oordeel += '\n--- Step 1: Compare global structure ---\n'
+        if len(function_behaviour) == len(norm_behaviour):
+            decision = 'CORRECT'
+        else:
+            decision = 'INCORRECT'
+        oordeel += "Number of behaviours:{} f(x) = {}, norm = {}\n".format(decision, len(function_behaviour) -1, len(norm_behaviour) -1)
         
-        
-        #iterate to len - 1 because last point is END statement
-        for i in range(longest - 1):
+        #Test behavioural sequence
+        decision = 'CORRECT'
+
+        string1 = 'f(x): '
+        string2 = 'norm: '
+        string3 = '\n----BEHAVIOURAL DATA-----\n'
+        string3 += 'formatted as:\n'
+        string3 += '(i, left_x) direction (i, right_x)\n\n'
+        string3 += '  F(X):  \n'
+        string4 = '  Norm:\n'
+        for i in range(longest):
+            if i < len(function_behaviour)-1 and i < len(norm_behaviour) -1:
+                if function_behaviour[i][0] != norm_behaviour[i][0]:
+                    decision = 'INCORRECT'
+                    
             if i < len(function_behaviour) -1:
                 direction = function_behaviour[i][0]
                 index = function_behaviour[i][1]
                 index_next = function_behaviour[i+1][1]
                 left_x = round(x[index], 2)
                 right_x = round(x[index_next], 2)
-                oordeel += ' ({}, {}), {}, ({}, {}) ---'.format(index, left_x, direction, index_next, right_x)
+                string3 += ' ({}, {}), {}, ({}, {})\n'.format(index, left_x, direction, index_next, right_x)
+                
+                if function_behaviour[i][0] == 'concave':
+                    string1 += ' - '
+                elif function_behaviour[i][0] == 'convex':
+                    string1 += ' + '
+                else:
+                    string1 += ' 0 '
+                    
             else:
-                oordeel += '       NONE             ----- '
+                string3 += '       NONE             ----- '
                 
             if i < len(norm_behaviour) -1:
                 direction = norm_behaviour[i][0]
@@ -322,13 +345,26 @@ class Calculations:
                 index_next = norm_behaviour[i+1][1]
                 left_x = round(norm_x[index], 2)
                 right_x = round(norm_x[index_next], 2)
-                oordeel += '({}, {}), {}, ({}, {})\n'.format(index, left_x, direction, index_next, right_x)
+                string4 += '({}, {}), {}, ({}, {})\n'.format(index, left_x, direction, index_next, right_x)
+                
+                if function_behaviour[i][0] == 'concave':
+                    string2 += ' - '
+                elif function_behaviour[i][0] == 'convex':
+                    string2 += ' + '
+                else:
+                    string2 += ' 0 '
             else:
-                oordeel += '          NONE              \n'
+                string3 += '          NONE              \n'
             
             
-            
-        oordeel += '\n\n'
+        oordeel += 'Direction of behaviours: {}, {}, {}'.format(decision, string1, string2)
+        oordeel += '\n'
+        if decision == 'CORRECT':
+            oordeel += 'Step 1 COMPLETE. (Global structure is correct)\n'
+            oordeel += '\n--- Step 2: Analyse further ---\n'
+        oordeel += string3
+        oordeel += '\n'
+        oordeel += string4
         return oordeel
             
 
