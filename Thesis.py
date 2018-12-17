@@ -224,20 +224,61 @@ class Calculations:
 
         function_behaviour = self.find_function_behaviour(x_list, rc2_list, p)
         norm_behaviour = self.find_function_behaviour(norm_x, norm_rc2, p)
+        str4 = self.assemble_oordeel('', function_behaviour, norm_behaviour, x_list, norm_x)
+        
+        
         
         #Check to see if desired pattern matched exactly
         """ WHEN DOING SURFACE CALCULATIONS, DATA FROM STRAIGHT LINE HAS BEEN CUT OUT"""
-        pattern_match = 0
+        pattern_match = 1
+        reasons = {
+                'number_of_behaviours' : True,
+                'direction_of_behaviours' : True,
+                'nr_txt' : '',
+                'dir_txt' : ''
+                }
+        
+        str1 = '\n--- Step 1: Compare global structure ---\n'
+        
+        #Numbers of behaviours do not match
         if len(function_behaviour) == len(norm_behaviour):
-            pattern_match = 1
+            decision = 'CORRECT'
+            str1 += '1.1) Number of behaviours: {} (f(x)={}, norm={})\n'.format(decision, len(function_behaviour), len(norm_behaviour))
+            str1 += ' -Student understands that depending on the shape of the vase, \n  the water surface speed will vary.\n -Student draws correct number of speed transitions according to vase\n'
+        else:
+            pattern_match = 0
+            reasons['number_of_behaviours'] = False
+            decision = 'INCORRECT'
+            str1 += '1.1) Number of behaviours: {} (f(x)={}, norm={})\n'.format(decision, len(function_behaviour), len(norm_behaviour))
+            str1+= '  This can mean one of three things:\n'
+            str1 += '  A: The drawing is sloppy but could be sort of correct\n'
+            str1 += '  B: The drawing contains straight lines rather than curves\n'
+            str1 += '  C: The drawing is incorrect\n'
+            reasons['nr_txt'] += str1
+            
+        if reasons['number_of_behaviours'] == True:
             #Check if the behaviour sequence is the same
             for i in range(len(function_behaviour)):
                 if function_behaviour[i][0] != norm_behaviour[i][0]:
                     pattern_match = 0
                     break
-        
+               
+            str2 = ''
+            if pattern_match == 1:
+                str2 += '\n1.2)) Direction of behaviours CORRECT:\n'
+            else:
+                str2 += '\n1.2)Direction of behaviours INCORRECT:\n'
             
-        string = '--- Pattern Analysis ---\n'
+            str2 += str4 + '\n'
+            str2 += '  Student understands that:\n'
+            str2+= ' -Vase gets wider, speed at which surface rises slows down continiously,\n  resulting in a concave drawing\n'
+            str2+= ' -Vase gets smaller, speed at which surface rises slows down continiously,\n  resulting in a convex drawing\n'
+            str2+= ' -Vase width doesnt change, speed at which surface rises is constant,\n  resulting in a straight line in the drawing\n'
+            reasons['dir_txt'] += str2
+
+                
+            
+    
         #Adds end points to the behaviour array
         function_behaviour.append(['END', len(x_list) - 1])
         norm_behaviour.append(['END', len(norm_x) - 1])
@@ -251,7 +292,7 @@ class Calculations:
             #Total surface distribution close to norm? =>
             #Shape of RC2 correct? => Student recognizes when walls vase are getting smaller, is this happening increasingly or decreasingly
             #All of the above correct? perfect match
-            string += 'Pattern: Perfect match, comparing lengths of subgraphs...\n'
+            #string += 'Pattern: Perfect match, comparing lengths of subgraphs...\n'
             
             #Add index of Xcoord of last element, so last subgraph length can be computed
             l = []
@@ -266,8 +307,9 @@ class Calculations:
             #Decide if the lengths are close enough
             
         else:
+            pass
             #Pattern doesnt match, investigate further if there is still a possible match
-            string += 'Pattern: No match, analysing further...\n'
+            #string += 'Pattern: No match, analysing further...\n'
             
             
             
@@ -278,36 +320,24 @@ class Calculations:
         
         difference = abs(float(concave) - float(norm_concave))
         max_difference = 10
-        oordeel = string
-        if difference < max_difference:
-            string += "--- Surface distribution: CORRECT ---\n Graph: Concave = {}%, Convex = {}%\n Norm: Concave = {}%, Convex = {}%\n Absolute difference = {}%, limit = {}%\n".format(concave, convex, norm_concave, norm_convex, difference, max_difference)
-        else:
-            string += "--- Surface distribution: INCORRECT ---\n Graph: Concave = {}%, Convex = {}%\n Norm: Concave = {}%, Convex = {}%\n  Absolute difference = {}%, limit = {}%\n".format(concave, convex, norm_concave, norm_convex, difference, max_difference)
+       # oordeel = string
+       # if difference < max_difference:
+       #     string += "--- Surface distribution: CORRECT ---\n Graph: Concave = {}%, Convex = {}%\n Norm: Concave = {}%, Convex = {}%\n Absolute difference = {}%, limit = {}%\n".format(concave, convex, norm_concave, norm_convex, difference, max_difference)
+      #  else:
+      #      string += "--- Surface distribution: INCORRECT ---\n Graph: Concave = {}%, Convex = {}%\n Norm: Concave = {}%, Convex = {}%\n  Absolute difference = {}%, limit = {}%\n".format(concave, convex, norm_concave, norm_convex, difference, max_difference)
             
-        string2 = ''
-        oordeel = self.assemble_oordeel(string2, function_behaviour, norm_behaviour, x_list, norm_x)
-  
         
-        return oordeel
+        str3 = str1 + str2
+
+        
+        return str3
         
     def assemble_oordeel(self, oordeel, function_behaviour, norm_behaviour, x, norm_x):
         #iterate to len - 1 because last point is END statement
         longest = max(len(function_behaviour), len(norm_behaviour)) -1
    
        
-         
-        left_x = ''
-        right_x = ''
-        direction = ''
-        oordeel += '\n--- Step 1: Compare global structure ---\n'
-        if len(function_behaviour) == len(norm_behaviour):
-            decision = 'CORRECT'
-        else:
-            decision = 'INCORRECT'
-        oordeel += "Number of behaviours:{} f(x) = {}, norm = {}\n".format(decision, len(function_behaviour) -1, len(norm_behaviour) -1)
-        
-        #Test behavioural sequence
-        decision = 'CORRECT'
+
 
         string1 = 'f(x): '
         string2 = 'norm: '
@@ -316,6 +346,7 @@ class Calculations:
         string3 += '(i, left_x) direction (i, right_x)\n\n'
         string3 += '  F(X):  \n'
         string4 = '  Norm:\n'
+        decision = 'CORRECT'
         for i in range(longest):
             if i < len(function_behaviour)-1 and i < len(norm_behaviour) -1:
                 if function_behaviour[i][0] != norm_behaviour[i][0]:
@@ -347,25 +378,27 @@ class Calculations:
                 right_x = round(norm_x[index_next], 2)
                 string4 += '({}, {}), {}, ({}, {})\n'.format(index, left_x, direction, index_next, right_x)
                 
-                if function_behaviour[i][0] == 'concave':
+                if norm_behaviour[i][0] == 'concave':
                     string2 += ' - '
-                elif function_behaviour[i][0] == 'convex':
+                elif norm_behaviour[i][0] == 'convex':
                     string2 += ' + '
                 else:
                     string2 += ' 0 '
             else:
-                string3 += '          NONE              \n'
+                string4 += '          NONE              \n'
             
+        if len(function_behaviour) != len(norm_behaviour):
+            decision = 'INCORRECT'
             
-        oordeel += 'Direction of behaviours: {}, {}, {}'.format(decision, string1, string2)
-        oordeel += '\n'
-        if decision == 'CORRECT':
-            oordeel += 'Step 1 COMPLETE. (Global structure is correct)\n'
-            oordeel += '\n--- Step 2: Analyse further ---\n'
-        oordeel += string3
-        oordeel += '\n'
-        oordeel += string4
-        return oordeel
+        
+     
+            
+        temp = string1 +'\n'+ string2
+        temp2 = string3 + string4
+     
+
+ 
+        return temp
             
 
     
