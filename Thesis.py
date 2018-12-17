@@ -218,12 +218,18 @@ class Calculations:
              
         return oordeel1, oordeel2
         
-    def beoordeel(self, x_list, rc2_list, norm_x, norm_rc2, surface_data, surface_data_norm, p):
+    def beoordeel(self, x, y, x_list, rc2_list, norm_x, norm_rc2, surface_data, surface_data_norm, p):
         print('pppp ==== {}'.format(p))
         #Get sequance of behaviour
 
+        
         function_behaviour = self.find_function_behaviour(x_list, rc2_list, p)
         norm_behaviour = self.find_function_behaviour(norm_x, norm_rc2, p)
+        
+        #Adds end points to the behaviour array
+        function_behaviour.append(['END', len(x_list) - 1])
+        norm_behaviour.append(['END', len(norm_x) - 1])
+        
         str4 = self.assemble_oordeel('', function_behaviour, norm_behaviour, x_list, norm_x)
         
         
@@ -233,12 +239,43 @@ class Calculations:
         pattern_match = 1
         reasons = {
                 'number_of_behaviours' : True,
-                'direction_of_behaviours' : True,
+                'direction_of_behaviours' : False,
                 'nr_txt' : '',
                 'dir_txt' : ''
                 }
         
-        str1 = '\n--- Step 1: Compare global structure ---\n'
+
+        decision = 'CORRECT'
+        oordeel = '\n--- Step 1: Sanity checks, Graph doesnt go backwards or downwards ---\n'
+     
+        for i in range(len(x) - 1):
+            if x[i + 1] <= x[i]:
+                decision = 'INCORRECT'
+                break
+            
+        
+        oordeel += '1.1) Check if  X[i] < X[i+1]: {} \n'.format(decision)
+        decision = 'CORRECT'
+        for i in range(len(y) - 1):
+            if y[i+1] <= y[i]:
+                decision = 'INCORRECT'
+                print('y[i+1] = {} <= y[i] {}'.format(y[i+1], y[i]))
+                break
+            
+        oordeel += '1.2) Check if  Y[i] < Y[i+1]: {} \n'.format(decision)
+        
+        if decision == 'INCORRECT':
+            strx = '\n--- STEP 1 FAILED ---\n'
+          #  strx += '  A: Student does not understand the problem at all\n'
+           # strx += '  B: Student understands problem, made minor mistake where RC < 0\n'
+           # strx += '  Redraw the graph for further analysis\n'
+            oordeel += strx
+            #return oordeel
+        else:
+            oordeel += '\n--- STEP 1 SUCCES ---\n'
+        
+        str1 = ''
+        str1 += '\n--- Step 2: Compare global structure ---\n'
         
         #Numbers of behaviours do not match
         if len(function_behaviour) == len(norm_behaviour):
@@ -256,32 +293,43 @@ class Calculations:
             str1 += '  C: The drawing is incorrect\n'
             reasons['nr_txt'] += str1
             
-        if reasons['number_of_behaviours'] == True:
-            #Check if the behaviour sequence is the same
-            for i in range(len(function_behaviour)):
-                if function_behaviour[i][0] != norm_behaviour[i][0]:
-                    pattern_match = 0
-                    break
-               
-            str2 = ''
-            if pattern_match == 1:
-                str2 += '\n1.2)) Direction of behaviours CORRECT:\n'
-            else:
-                str2 += '\n1.2)Direction of behaviours INCORRECT:\n'
-            
+        str2 = ''
+        
+        #Check if the behaviour sequence is the same
+        for i in range(len(function_behaviour)):
+            if function_behaviour[i][0] != norm_behaviour[i][0]:
+                pattern_match = 0
+                break
+           
+        
+        if pattern_match == 1:
+            str2 += '\n1.2) Direction of behaviours CORRECT:\n'
+            reasons['direction_of_behaviours'] = True
             str2 += str4 + '\n'
-            str2 += '  Student understands that:\n'
-            str2+= ' -Vase gets wider, speed at which surface rises slows down continiously,\n  resulting in a concave drawing\n'
-            str2+= ' -Vase gets smaller, speed at which surface rises slows down continiously,\n  resulting in a convex drawing\n'
-            str2+= ' -Vase width doesnt change, speed at which surface rises is constant,\n  resulting in a straight line in the drawing\n'
-            reasons['dir_txt'] += str2
+            str2 += '  Student DOES understand that:\n'
+        else:
+            str2 += '\n1.2)Direction of behaviours INCORRECT:\n'
+            str2 += str4 + '\n'
+            str2 += '  Student does NOT understand that:\n'
+            
+        
+
+        str2+= ' -Vase gets wider, speed at which surface rises slows down continiously,\n  resulting in a concave drawing\n'
+        str2+= ' -Vase gets smaller, speed at which surface rises slows down continiously,\n  resulting in a convex drawing\n'
+        str2+= ' -Vase width doesnt change, speed at which surface rises is constant,\n  resulting in a straight line in the drawing\n'
+        reasons['dir_txt'] += str2
 
                 
+        
+        if reasons['number_of_behaviours'] == False:
+            str2 += '\n--- Step 2: FAILED ---\n'
+            str2 += '  Check A, if A fails, check B, if B fails -> C is True \n\n'
+        else:
+            str2 += '\n--- Step 2: SUCCES ---\n'
+            str2 += '\n--- Step 3: Check for vertical consistency ---\n'
             
     
-        #Adds end points to the behaviour array
-        function_behaviour.append(['END', len(x_list) - 1])
-        norm_behaviour.append(['END', len(norm_x) - 1])
+
         
         #Exact pattern match
         if pattern_match == 1:
@@ -313,13 +361,13 @@ class Calculations:
             
             
             
-        concave = str(100* round(surface_data[1] / surface_data[0], 4)) #percentage of surface < 0
-        convex = str(100* round(surface_data[2] / surface_data[0], 4))  #percentage of surface > 0
-        norm_concave = str(100* round(surface_data_norm[1] / surface_data_norm[0], 4)) #percentage of surface < 0
-        norm_convex = str(100* round(surface_data_norm[2] / surface_data_norm[0], 4))  #percentage of surface > 0
+#        concave = str(100* round(surface_data[1] / surface_data[0], 4)) #percentage of surface < 0
+ #       convex = str(100* round(surface_data[2] / surface_data[0], 4))  #percentage of surface > 0
+  #      norm_concave = str(100* round(surface_data_norm[1] / surface_data_norm[0], 4)) #percentage of surface < 0
+   #     norm_convex = str(100* round(surface_data_norm[2] / surface_data_norm[0], 4))  #percentage of surface > 0
         
-        difference = abs(float(concave) - float(norm_concave))
-        max_difference = 10
+    #    difference = abs(float(concave) - float(norm_concave))
+     #   max_difference = 10
        # oordeel = string
        # if difference < max_difference:
        #     string += "--- Surface distribution: CORRECT ---\n Graph: Concave = {}%, Convex = {}%\n Norm: Concave = {}%, Convex = {}%\n Absolute difference = {}%, limit = {}%\n".format(concave, convex, norm_concave, norm_convex, difference, max_difference)
@@ -327,14 +375,14 @@ class Calculations:
       #      string += "--- Surface distribution: INCORRECT ---\n Graph: Concave = {}%, Convex = {}%\n Norm: Concave = {}%, Convex = {}%\n  Absolute difference = {}%, limit = {}%\n".format(concave, convex, norm_concave, norm_convex, difference, max_difference)
             
         
-        str3 = str1 + str2
+        oordeel += str1 + str2
 
         
-        return str3
+        return oordeel
         
     def assemble_oordeel(self, oordeel, function_behaviour, norm_behaviour, x, norm_x):
         #iterate to len - 1 because last point is END statement
-        longest = max(len(function_behaviour), len(norm_behaviour)) -1
+        longest = max(len(function_behaviour), len(norm_behaviour)) 
    
        
 
@@ -348,11 +396,11 @@ class Calculations:
         string4 = '  Norm:\n'
         decision = 'CORRECT'
         for i in range(longest):
-            if i < len(function_behaviour)-1 and i < len(norm_behaviour) -1:
+            if i < len(function_behaviour) - 1 and i < len(norm_behaviour) - 1:
                 if function_behaviour[i][0] != norm_behaviour[i][0]:
                     decision = 'INCORRECT'
                     
-            if i < len(function_behaviour) -1:
+            if i < len(function_behaviour) - 1:
                 direction = function_behaviour[i][0]
                 index = function_behaviour[i][1]
                 index_next = function_behaviour[i+1][1]
@@ -370,7 +418,7 @@ class Calculations:
             else:
                 string3 += '       NONE             ----- '
                 
-            if i < len(norm_behaviour) -1:
+            if i < len(norm_behaviour) - 1:
                 direction = norm_behaviour[i][0]
                 index = norm_behaviour[i][1]
                 index_next = norm_behaviour[i+1][1]

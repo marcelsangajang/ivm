@@ -245,7 +245,7 @@ class Gui:
             
             surface_data = self.data[len(self.data)-1]
             surface_data_norm = list(norm[len(norm) - 1])
-            string = self.calc.beoordeel(self.data[0], self.data[3], norm[0], norm[3], surface_data, surface_data_norm, p)
+            string = self.calc.beoordeel(self.raw_data[0][0], self.raw_data[0][3], self.data[0], self.data[3], norm[0], norm[3], surface_data, surface_data_norm, p)
             T.insert(END, string)
             
             #add tab
