@@ -10,7 +10,8 @@ from matplotlib.figure import Figure
 import os
 import re
 from scipy.interpolate import UnivariateSpline
-
+import table as tbb
+import itertools
 #https://stackoverflow.com/questions/31440167/placing-plot-on-tkinter-main-window-in-python
 #https://pythonprogramming.net/how-to-embed-matplotlib-graph-tkinter-gui/
 #Drawing graphs https://www.python-course.eu/tkinter_events_binds.php
@@ -204,7 +205,11 @@ class Gui:
         window = Tk()
         window.grid()
         temp1 = self.tkvar.get()
-        window.title('Grafiek = {}, norm = {}, nr points = {}, p='.format(temp1, self.norm_file, nr_points))
+        if self.scale.get() == 1:
+            temp = self.tk_scale_to_y.get()
+        else:
+            temp = 'None'
+        window.title('Grafiek = {}, norm = {}, nr points = {}, scaling = {}'.format(temp1, self.norm_file, nr_points, temp))
         
         mastertabs = ttk.Notebook(window)
   
@@ -221,10 +226,8 @@ class Gui:
             """Add frame for table"""
             table = Frame(tab, bg="white", borderwidth=1, relief="solid")
             table.grid(row=0, column=1, sticky=N+E+W+S)
-            e = Example(table)
-            e.grid()
-            e.update_table(self.data, self.titles_table)
-      
+            self.update_table(table, self.data, self.titles_table)
+            #table.update()
            
             """Add frame for graphs"""
             box_mid = Frame(tab, bg="white", borderwidth=1, relief="solid")
@@ -247,11 +250,54 @@ class Gui:
             surface_data_norm = list(norm[len(norm) - 1])
             string = self.calc.beoordeel(self.raw_data[0][0], self.raw_data[0][3], self.data[0], self.data[3], norm[0], norm[3], surface_data, surface_data_norm, p)
             T.insert(END, string)
+  
             
             #add tab
             mastertabs.add(tab, text=self.titles_mastertabs[i])    
         mastertabs.grid(sticky=N)  # grid to make visible
 
+    def update_table(self, root, data, titles):
+            import itertools
+            temp = [None]*len(titles)
+            h = len(data[0])
+            w = len(data)
+            #tmp = list(itertools.zip_longest(data[0], data[1], data[2], data[3]))
+                      
+            table = tbb.Table(root, titles, column_minwidths=temp)
+            table.grid()
+            lengths = [0]*w
+           
+            for i in range(w):
+                lengths[i] = len(data[i])
+               # while len(tmp[i]) < len(tmp[0]):
+                  #  tmp[i].append(None)
+                    
+            print('lenghts: data:{}, x: {}, y: {}, rc1:{}, rc2:{}'.format(len(data),len(data[0]), len(data[1]), len(data[2]), len(data[3])))
+            c = 0
+            nc = 0
+            
+            for i in range(h):
+                arr = ['i={}'.format(i)]
+                
+                for j in range(w):
+                    #Depending if spline is used, arrays have different lengths (should be fixed)
+                    #this code will equalize the lengths of the arrays
+                   if i >= lengths[j]:
+                       nc += 1
+                       arr.append('')
+                   else:
+                       arr.append(data[j][i])
+                       c += 1
+                    
+                    
+                table.insert_row(arr)
+            #table.update()   
+            #table.update()
+            root.update()
+        
+            print('getallen counter = {}, none counter = {}'.format(c, nc))
+      
+        
     #Updates the popup menus choices (which are files stored in map ./graph/)
     def update_filelist(self):
         files = []
@@ -514,52 +560,7 @@ class Gui:
      
         return lines
     
-class Example(tk.Frame):
-    def __init__(self, root):
-
-        tk.Frame.__init__(self, root)
-        self.canvas = tk.Canvas(root, borderwidth=0, background="#ffffff")
-        self.frame = tk.Frame(self.canvas, background="#ffffff")
-        self.frame.grid(sticky=N+E+S+W)
-        self.vsb = tk.Scrollbar(root, orient="vertical", command=self.canvas.yview)
-        self.canvas.configure(yscrollcommand=self.vsb.set)
-
-        self.vsb.grid(row=0, column = 0,sticky=E+N+S)
-        self.canvas.grid(row=0, column = 0, sticky=N+W+S+E)
-        self.canvas.create_window((8,8), window=self.frame, anchor="nw", 
-                                  tags="self.frame")
-
-        self.frame.bind("<Configure>", self.onFrameConfigure)
-
-    def onFrameConfigure(self, event):
-        '''Reset the scroll region to encompass the inner frame'''
-        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
-        
-    def update_table(self, data, titles):         
-        scrollbar = self.frame
-        table_w = len(titles) - 1 #+1 for index column
-        table_h = len(data[0]) #+1 for title row
-        #Sets up title row
-        for i in range(len(titles)):
-            b = Label(scrollbar, text=titles[i], bg='medium spring green')
-            b.grid(row=0, column=i, sticky=W+E+N+S)
-           # table_conten[i].append(b)
-        
-        #Sets up title column (index)
-        for i in range(table_h):
-            text1 = 'i = ' + str(i)
-            b = Label(scrollbar, text=text1, bg='white')
-            b.grid(row=i+1, column=0, sticky=W+E+N+S)
-            #table_conten[0].append(b)
-          
-        #Creates rows for Y, RC1, RC2
-        for i in range(table_w):            
-            height = len(data[i])
-            
-            for j in range(height): #Rows
-                y = round(data[i][j], 3)
-                b = Label(scrollbar, text=y, bg='white', borderwidth=1, relief="sunken")
-                b.grid(row=j+1, column=i+1, sticky=W+E+N+S)
+    
                 
 if __name__ == '__main__':
     root = Tk()

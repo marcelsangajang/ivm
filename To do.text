@@ -55,3 +55,8 @@ Data output wrong!:
     
     Scaling is niet exact naar x=100, en beide grafieken hebben andere eindlengte
     
+Another Data output wrong!!:
+    (print) lenghts: data:5, x: 40, y: 40, rc1:40, rc2:39
+        Rc1 length should be 1 smaller than x and ys, RC2 should be 2 smaller
+        lengths are somewhat deviating depending on where spline is applied
+    

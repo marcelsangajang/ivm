@@ -219,10 +219,7 @@ class Calculations:
         return oordeel1, oordeel2
         
     def beoordeel(self, x, y, x_list, rc2_list, norm_x, norm_rc2, surface_data, surface_data_norm, p):
-        print('pppp ==== {}'.format(p))
-        #Get sequance of behaviour
-
-        
+        #Get sequance of behaviour        
         function_behaviour = self.find_function_behaviour(x_list, rc2_list, p)
         norm_behaviour = self.find_function_behaviour(norm_x, norm_rc2, p)
         
@@ -230,10 +227,23 @@ class Calculations:
         function_behaviour.append(['END', len(x_list) - 1])
         norm_behaviour.append(['END', len(norm_x) - 1])
         
-        str4 = self.assemble_oordeel('', function_behaviour, norm_behaviour, x_list, norm_x)
+        str4 = self.print_behaviour('', function_behaviour, norm_behaviour, x_list, norm_x)
         
-        
-        
+        #Remove straight linezones
+        if p != '0':
+            fb = []
+            nb = []
+            for a in function_behaviour:
+                if a[0] != '0':
+                    fb.append(a)
+                    
+            for a in norm_behaviour:
+                if a[0] != '0':
+                    nb.append(a)
+            
+            str5 = self.print_behaviour('', fb, nb, x_list, norm_x)
+            function_behaviour = fb
+            norm_behaviour = nb
         #Check to see if desired pattern matched exactly
         """ WHEN DOING SURFACE CALCULATIONS, DATA FROM STRAIGHT LINE HAS BEEN CUT OUT"""
         pattern_match = 1
@@ -259,28 +269,29 @@ class Calculations:
         for i in range(len(y) - 1):
             if y[i+1] <= y[i]:
                 decision = 'INCORRECT'
-                print('y[i+1] = {} <= y[i] {}'.format(y[i+1], y[i]))
                 break
             
         oordeel += '1.2) Check if  Y[i] < Y[i+1]: {} \n'.format(decision)
         
         if decision == 'INCORRECT':
             strx = '\n--- STEP 1 FAILED ---\n'
-          #  strx += '  A: Student does not understand the problem at all\n'
-           # strx += '  B: Student understands problem, made minor mistake where RC < 0\n'
+            strx += '  A: Student does not understand the problem at all (If deviation is big)\n'
+            strx += '  B: Student understands problem, made minor mistake (If deviation is small\n'
+            strx += '  Fix B by curve fitting, then repeat step 1\n'
+            strx += '  If still incorrect -> A'
            # strx += '  Redraw the graph for further analysis\n'
             oordeel += strx
             #return oordeel
         else:
-            oordeel += '\n--- STEP 1 SUCCES ---\n'
+            oordeel += '\n--- Step 1: SUCCES ---\n'
         
-        str1 = ''
+        str1 = '\n'
         str1 += '\n--- Step 2: Compare global structure ---\n'
         
         #Numbers of behaviours do not match
         if len(function_behaviour) == len(norm_behaviour):
             decision = 'CORRECT'
-            str1 += '1.1) Number of behaviours: {} (f(x)={}, norm={})\n'.format(decision, len(function_behaviour), len(norm_behaviour))
+            str1 += '1.1) Number of behaviours: {} (f(x)={}, norm={})\n'.format(decision, len(function_behaviour)-1, len(norm_behaviour)-1)
             str1 += ' -Student understands that depending on the shape of the vase, \n  the water surface speed will vary.\n -Student draws correct number of speed transitions according to vase\n'
         else:
             pattern_match = 0
@@ -323,13 +334,23 @@ class Calculations:
         
         if reasons['number_of_behaviours'] == False:
             str2 += '\n--- Step 2: FAILED ---\n'
-            str2 += '  Check A, if A fails, check B, if B fails -> C is True \n\n'
+            str2 += '  Test A, if A fails, Test B, if B fails -> C is True \n'
+            
+            if p == '0':
+                str2 += '  -Test A: press "dectecting straight lines" checkbox, select proper p value,\n  then repeat this step. If A still fails, test B\n'
+            else:
+                str2 += '  -A tested with p = {}, still incorrect, test for B'
+                str2 += '  -Test B: To be determined\n'
+        #elif reasons['direction_of_behaviours'] == False:
+            
         else:
             str2 += '\n--- Step 2: SUCCES ---\n'
-            str2 += '\n--- Step 3: Check for vertical consistency ---\n'
+            str2 += '\n--- Step 3: Compare RC2 graph vs norm ---\n'
+            
             
     
 
+        #----STEP 3 -----
         
         #Exact pattern match
         if pattern_match == 1:
@@ -343,23 +364,84 @@ class Calculations:
             #string += 'Pattern: Perfect match, comparing lengths of subgraphs...\n'
             
             #Add index of Xcoord of last element, so last subgraph length can be computed
+            st = 'Graph:\n'
+            st_n = 'Norm:\n'
+            st += '  Invection points:\n'
+            st_n += '  Invection points:\n'
             l = []
             ln = []
+            answers = []
+            answer_total = 0
             #Finds the length of each subgraph 
-            for i in range(len(function_behaviour)):
-                length = 1#function_behaviour[i+1][1] - function_behaviour[i][1]
+            for i in range(len(function_behaviour) - 1):
+                behaviour = function_behaviour[i][0]
+                index_next = function_behaviour[i+1][1] 
+                index = function_behaviour[i][1]
+                length = x[index_next] - x[index]
+                #st += '    {} ({},{})\n'.format(behaviour, round(x[index_next], 2), round(y[index_next], 2))
+                st += '    {}, x = {} to {}, i = {} to {}\n'.format(behaviour, round(x[index], 2), round(x[index_next], 2), index, index_next)
                 l.append(length)
-                length_norm = 1#norm_behaviour[i+1][1] - norm_behaviour[i][1]
+                
+                behaviour = norm_behaviour[i][0]
+                index_next = norm_behaviour[i+1][1] 
+                index = norm_behaviour[i][1]
+                length_norm = norm_x[index_next] - norm_x[index]
+               # st_n += '    {} ({},{})\n'.format(behaviour, round(norm_x[index_next], 4), round(y[index_next], 4))
+                st_n += '    {}, x = {} to {}, i = {} to {}\n'.format(behaviour, round(norm_x[index], 2), round(norm_x[index_next], 2), index, index_next)
                 ln.append(length_norm)
                 
+                answer = length / length_norm
+                answer = abs(1.0 - answer)
+                answers.append(answer)
+                answer_total += answer
+                
             #Decide if the lengths are close enough
+            avg_deviation = round(100*answer_total / (len(function_behaviour) - 1), 4)
+
             
+            st += '    avg deviation = {}%\n'.format(avg_deviation)
+            total = 0
+            neg = 0
+            pos = 0
+            total_n = 0
+            neg_n = 0
+            pos_n = 0
+            #Find the total surface of RC2 of both graph and norm
+            len_g = len(surface_data)
+            len_n = len(surface_data_norm)
+            for i in range(len_g):
+                total += surface_data[0]
+                neg += surface_data[1]
+                pos += surface_data[2]
+                
+            for i in range(len_n):
+                total_n += surface_data_norm[0]
+                neg_n += surface_data_norm[1]
+                pos_n += surface_data_norm[2]
+                
+            total = round(total, 2)
+            neg = round(neg, 2)
+            pos = round(pos, 2)
+            
+            total_n = round(total_n, 2)
+            neg_n = round(neg_n, 2)
+            pos_n = round(pos_n, 2)
+            
+            st += '\n'
+            st_n += '\n'
+            st += '  Sufaces: total = {}, negative = {}, positive = {}\n'.format(total, neg, pos)
+            st_n += '  Sufaces: total = {}, negative = {}, positive = {}\n'.format(total_n, neg_n, pos_n)
+            
+                
+            
+            str2 += st
+            str2 += st_n
         else:
             pass
             #Pattern doesnt match, investigate further if there is still a possible match
             #string += 'Pattern: No match, analysing further...\n'
             
-            
+            str2 += '\n--- Step 4: Check for surface distribution ---\n'
             
 #        concave = str(100* round(surface_data[1] / surface_data[0], 4)) #percentage of surface < 0
  #       convex = str(100* round(surface_data[2] / surface_data[0], 4))  #percentage of surface > 0
@@ -380,7 +462,7 @@ class Calculations:
         
         return oordeel
         
-    def assemble_oordeel(self, oordeel, function_behaviour, norm_behaviour, x, norm_x):
+    def print_behaviour(self, oordeel, function_behaviour, norm_behaviour, x, norm_x):
         #iterate to len - 1 because last point is END statement
         longest = max(len(function_behaviour), len(norm_behaviour)) 
    
@@ -437,9 +519,6 @@ class Calculations:
             
         if len(function_behaviour) != len(norm_behaviour):
             decision = 'INCORRECT'
-            
-        
-     
             
         temp = string1 +'\n'+ string2
         temp2 = string3 + string4
