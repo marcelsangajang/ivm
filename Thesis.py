@@ -24,210 +24,31 @@ class Calculations:
     def __init__(self):
         pass
     
-    def calculate_all(self, points, titles, nr_points):
-        data_list = []
-        
-        #Creates array for X and array for Y
-        temp1 = self.reduce_points(points, nr_points)
-        temp = list(zip(*temp1))
-        x = temp[0]
-        y = temp[1]
-        
-        for i in range(len(titles)):
+#----------------------------------------------------
+#---------- Decision making algorithms---------------
+#----------------------------------------------------
             
-            #Calculate RC1 and RC2
-            #Spline XY, calculate RC1, spline RC1, calc RC2, spline RC2
-            if i == 4:
-                s = UnivariateSpline(x, y, s=1)
-                ys = s(x)
-                rc1_list = self.rc_list(x, ys)
-                
-                xs = x[:-1]
-                print('1----length rc1 = {}, xs= {}'.format(len(rc1_list), len(xs)))
-                s = UnivariateSpline(xs, rc1_list, s=1)
-                ys = s(x)
-                rc1_list = ys
-                print('2---length rc1 = {}, xs= {}'.format(len(rc1_list), len(xs)))
-                rc2_list = self.rc_list(x, ys) 
-                
-                #print('length rc2 = {}'.format(len(rc2_list)))
-                xs = x[:-1]
-                s = UnivariateSpline(xs, rc2_list, s=1)
-                ys = s(x)
-                rc2_list = ys
-            #Spline XY, calc RC1, spline RC1, calc RC2
-            elif i == 3:
-                s = UnivariateSpline(x, y, s=1)
-                ys = s(x)
-                rc1_list = self.rc_list(x, ys)
-                
-                xs = x[:-1]
-                s = UnivariateSpline(xs, rc1_list, s=1)
-                ys = s(x)
-                rc1_list = ys
-                rc2_list = self.rc_list(x, ys) 
-                
-            #Spline XY, calc RC1, calc RC2
-            elif i == 1:
-                s = UnivariateSpline(x, y, s=1)
-                ys = s(x)
-                y = ys
-                rc1_list = self.rc_list(x, ys)
-                rc2_list = self.rc_list(x, rc1_list)      
-            #Calc XY, spline RC1, calc RC2
-            elif i == 2:
-                rc1_list = self.rc_list(x, y)  
-                xs = x[:-1]
-                s = UnivariateSpline(xs, rc1_list, s=1)
-                ys = s(x)
-                rc1_list = ys
-                rc2_list = self.rc_list(x, ys) 
-            elif i == 0:
-                #Calculate RC1 and RC2 based on raw input data 
-                rc1_list = self.rc_list(x, y)
-                rc2_list = self.rc_list(x, rc1_list)
-            else:
-                print('Error in method calculate.all in Thesis.py')
-                print(i)
-                
-            #format: [total surface, total neg serface, total pos surface]
-            xs = x[:-2]
-            temp = list(zip(xs, rc2_list))
-            surfaces_list = self.surface_list(temp)
-             
-            #oordeel = self.beoordeel_grafiek(surfaces_list, surface_total[0])
-            
-            data = x, y, rc1_list, rc2_list, surfaces_list
-            data_list.append(data)
-        return data_list
-    
-    #Scale function a onto coordinates of function b
-    def scale(self, a, b, y_scale = False):
+    def beoordeel(self, graph, norm, p):
+        x = graph[0]
+        y = graph[1]
+        rc1 = graph[2]
+        rc2 = graph[3]
         
-        if y_scale == False:
-            x_last_b = 100   
-            if len(b) > 1:
-                last = len(b) - 1
-                x_last_b = b[last][0]
-                
-            last = len(a) - 1
-            x_last_a = a[last][0]
-            
-            scale = x_last_b / x_last_a 
-         
-            
-            for i in range(len(a)):
-                a[i][0] *= scale
-                a[i][1] *= scale
-                
-          
-        else:
-            x_last_b = 100   
-            y_last_b = 100
-            
-            if len(b) > 1:
-                last = len(b) - 1
-                x_last_b = b[last][0]
-                y_last_b = b[last][1]
-           
-            last = len(a) - 1
-            x_last_a = a[last][0]
-            y_last_a = a[last][1]
-            
-            scale_x = x_last_b / x_last_a 
-            scale_y = y_last_b / y_last_a
-         
-            
-            for i in range(len(a)):
-                a[i][0] *= scale_x
-                a[i][1] *= scale_y
-                
-        return a
-            
+        x_n = norm[0]
+        y_n = norm[1]
+        rc1_n = norm[2]
+        rc2_n = norm[3]
         
         
-    def translate_to_origin(self, points):
-        x0 = points[0][0]
-        y0 = points[0][1]
-        
-        for i in range(len(points)):
-            points[i][0] -= x0
-            points[i][1] -= y0
-            
-        return points
-        
-
-    def reduce_points(self, pixel_coords, nr_points):
-        points = []
-        #We want to spread 50 points evenly across the raw data
-        #Deel de data set in 50 (pas op restwaarde) 
-        jumpsize = len(pixel_coords) / nr_points
-        if jumpsize < 1:
-            print('error: jumpsize < 1')
-            return
-        
-        counter = 0
-        for i in range(nr_points):
-            index = int(counter)
-    
-            points.append(pixel_coords[index])
-            counter += jumpsize
-        #Elk nieuw punt krijgt avg y en x in die zone
-        
-        return points
-    
-    def algorithm(self, x_list, rc2_list, n_size):
-        
-        a = list(zip(x_list, rc2_list))
-        surfaces_list = self.surface_list(a)
-        #print('surfaces list----------')
-        #print(surfaces_list)
-        surface_totals = [sum(x) for x in zip(*surfaces_list)]  #format: [total surface, total neg serface, total pos surface]
-        surface_total = surface_totals[0]
-        
-        oordeel1 = []; oordeel2 = []
-        
-        #itereer langs de lijst met oppervlakte
-        for i in range(len(surfaces_list)):
-            total = 0; neg = 0; pos = 0; counter = 0
-            
-            #Itereer langs de neighbourhood van punt i
-            for j in range(2*n_size):
-                x = i - n_size + j 
-
-                if x < 0 or x > len(surfaces_list) - 1 :
-                    continue
-                
-                #print("i = {}, x = {}".format(i,x))
-                counter += 1
-                total += surfaces_list[x][0]
-                neg += surfaces_list[x][1]
-                pos += surfaces_list[x][2]
-
- 
-            normalized_total = total/counter/surface_total
-            
-            if total == 0:
-                total = 1
-            neg_ratio = round(neg / total, 2)
-            pos_ratio = round(pos / total, 2)
-            total_ratio = round(normalized_total, 2)
-     
-            oordeel1.append(neg_ratio)          
-            oordeel2.append(total_ratio)
-             
-        return oordeel1, oordeel2
-        
-    def beoordeel(self, x, y, x_list, rc2_list, norm_x, norm_rc2, surface_data, surface_data_norm, p):
         #Get sequance of behaviour        
-        function_behaviour = self.find_function_behaviour(x_list, rc2_list, p)
-        norm_behaviour = self.find_function_behaviour(norm_x, norm_rc2, p)
+        function_behaviour = self.find_function_behaviour(x, rc2, p)
+        norm_behaviour = self.find_function_behaviour(x_n, rc2_n, p)
         
         #Adds end points to the behaviour array
-        function_behaviour.append(['END', len(x_list) - 1])
-        norm_behaviour.append(['END', len(norm_x) - 1])
+        function_behaviour.append(['END', len(rc2) - 1])
+        norm_behaviour.append(['END', len(rc2_n) - 1])
         
-        str4 = self.print_behaviour('', function_behaviour, norm_behaviour, x_list, norm_x)
+        str4 = self.print_behaviour('', function_behaviour, norm_behaviour, x, x_n)
         
         #Remove straight linezones
         if p != '0':
@@ -241,7 +62,7 @@ class Calculations:
                 if a[0] != '0':
                     nb.append(a)
             
-            str5 = self.print_behaviour('', fb, nb, x_list, norm_x)
+            str5 = self.print_behaviour('', fb, nb, x, x_n)
             function_behaviour = fb
             norm_behaviour = nb
         #Check to see if desired pattern matched exactly
@@ -366,8 +187,8 @@ class Calculations:
             #Add index of Xcoord of last element, so last subgraph length can be computed
             st = 'Graph:\n'
             st_n = 'Norm:\n'
-            st += '  Invection points:\n'
-            st_n += '  Invection points:\n'
+            st += '  RC2 Behaviour:\n'
+            st_n += '  RC2 Behaviour:\n'
             l = []
             ln = []
             answers = []
@@ -379,63 +200,91 @@ class Calculations:
                 index = function_behaviour[i][1]
                 length = x[index_next] - x[index]
                 #st += '    {} ({},{})\n'.format(behaviour, round(x[index_next], 2), round(y[index_next], 2))
-                st += '    {}, x = {} to {}, i = {} to {}\n'.format(behaviour, round(x[index], 2), round(x[index_next], 2), index, index_next)
+                st += '    {}, length= {}, x = {} to {}, i = {} to {}\n'.format(behaviour, round(length, 2), round(x[index], 2), round(x[index_next], 2), index, index_next)
                 l.append(length)
                 
                 behaviour = norm_behaviour[i][0]
                 index_next = norm_behaviour[i+1][1] 
                 index = norm_behaviour[i][1]
-                length_norm = norm_x[index_next] - norm_x[index]
+                length_norm = x_n[index_next] - x_n[index]
                # st_n += '    {} ({},{})\n'.format(behaviour, round(norm_x[index_next], 4), round(y[index_next], 4))
-                st_n += '    {}, x = {} to {}, i = {} to {}\n'.format(behaviour, round(norm_x[index], 2), round(norm_x[index_next], 2), index, index_next)
+                st_n += '    {}, length = {}, x = {} to {}, i = {} to {}\n'.format(behaviour, round(length_norm, 2), round(x_n[index], 2), round(x_n[index_next], 2), index, index_next)
                 ln.append(length_norm)
                 
-                answer = length / length_norm
+                answer = 2.0#length / length_norm
                 answer = abs(1.0 - answer)
                 answers.append(answer)
                 answer_total += answer
                 
             #Decide if the lengths are close enough
-            avg_deviation = round(100*answer_total / (len(function_behaviour) - 1), 4)
+            avg_deviation = round(100*answer_total / (len(function_behaviour) - 1), 2)
 
             
-            st += '    avg deviation = {}%\n'.format(avg_deviation)
-            total = 0
-            neg = 0
-            pos = 0
-            total_n = 0
-            neg_n = 0
-            pos_n = 0
-            #Find the total surface of RC2 of both graph and norm
-            len_g = len(surface_data)
-            len_n = len(surface_data_norm)
-            for i in range(len_g):
-                total += surface_data[0]
-                neg += surface_data[1]
-                pos += surface_data[2]
-                
-            for i in range(len_n):
-                total_n += surface_data_norm[0]
-                neg_n += surface_data_norm[1]
-                pos_n += surface_data_norm[2]
-                
-            total = round(total, 2)
-            neg = round(neg, 2)
-            pos = round(pos, 2)
             
-            total_n = round(total_n, 2)
-            neg_n = round(neg_n, 2)
-            pos_n = round(pos_n, 2)
+
+
             
             st += '\n'
             st_n += '\n'
-            st += '  Sufaces: total = {}, negative = {}, positive = {}\n'.format(total, neg, pos)
-            st_n += '  Sufaces: total = {}, negative = {}, positive = {}\n'.format(total_n, neg_n, pos_n)
             
-                
+            #graph surfaces
+            st += '  Surface:\n'
+            st_n += '  Surface:\n'
+            
+            #F(X) surface
+            surface1 = self.surfaces(x, y)      
+            total = round(surface1[0], 2)
+            neg = round(surface1[1], 2)
+            pos = round(surface1[2], 2) 
+            st += '    f(x): total = {}, negative = {}, positive = {}\n'.format(total, neg, pos)
+            
+            #RC1 surface
+            surface2 = self.surfaces(x, rc1)      
+            total = round(surface2[0], 2)
+            neg = round(surface2[1], 2)
+            pos = round(surface2[2], 2)
+            st += '    RC1: total = {}, negative = {}, positive = {}\n'.format(total, neg, pos)
+
+            #RC2 surface
+            surface3 = self.surfaces(x, rc2)      
+            total = round(surface3[0], 2)
+            neg = round(surface3[1], 2)
+            pos = round(surface3[2], 2)
+            st += '    RC2: total = {}, negative = {}, positive = {}\n'.format(total, neg, pos)
+            
+            #norm surfaces
+            #F(X) surface
+            surface1n = self.surfaces(x_n, y_n)      
+            total = round(surface1n[0], 2)
+            neg = round(surface1n[1], 2)
+            pos = round(surface1n[2], 2) 
+            st_n += '    f(x): total = {}, negative = {}, positive = {}\n'.format(total, neg, pos)
+            
+            #RC1 surface
+            surface2n = self.surfaces(x_n, rc1_n)      
+            total = round(surface2n[0], 2)
+            neg = round(surface2n[1], 2)
+            pos = round(surface2n[2], 2)
+            st_n += '    RC1: total = {}, negative = {}, positive = {}\n'.format(total, neg, pos)
+
+            #RC2 surface
+            surface3n = self.surfaces(x_n, rc2_n)      
+            total = round(surface3n[0], 2)
+            neg = round(surface3n[1], 2)
+            pos = round(surface3n[2], 2)
+            st_n += '    RC2: total = {}, negative = {}, positive = {}\n'.format(total, neg, pos)
+            
             
             str2 += st
             str2 += st_n
+            str2 += 'Comparison:\n'
+            str2 += '  Behaviour lenghts\n'
+            str2 += '    avg deviation = {}%\n'.format(avg_deviation)
+            str2 += '  Surfaces:\n'
+            str2 += '    f(x): graph - norm => {} - {} = {}\n'.format(round(surface1[0], 2), round(surface1n[0], 2), round(surface1[0] - surface1n[0], 2))
+            str2 += '    RC1: graph - norm => {} - {} = {}\n'.format(round(surface2[0], 2), round(surface2n[0], 2), round(surface2[0] - surface2n[0], 2))
+            str2 += '    RC2: graph - norm => {} - {} = {}\n'.format(round(surface3[0], 2), round(surface3n[0], 2), round(surface3[0] - surface3n[0], 2))
+            
         else:
             pass
             #Pattern doesnt match, investigate further if there is still a possible match
@@ -461,6 +310,7 @@ class Calculations:
 
         
         return oordeel
+    
         
     def print_behaviour(self, oordeel, function_behaviour, norm_behaviour, x, norm_x):
         #iterate to len - 1 because last point is END statement
@@ -589,6 +439,182 @@ class Calculations:
                 
         return richting_list
     
+#----------------------------------------------------
+#----------------------------------------------------
+#----------------------------------------------------
+        
+    def calculate_all(self, points, titles, nr_points):
+        data_list = []
+        
+        #Creates array for X and array for Y
+        temp1 = self.reduce_points(points, nr_points)
+        temp = list(zip(*temp1))
+        x = temp[0]
+        y = temp[1]
+        
+        for i in range(len(titles)):
+            
+            #Calculate RC1 and RC2
+            #Spline XY, calculate RC1, spline RC1, calc RC2, spline RC2
+            if i == 4:
+                s = UnivariateSpline(x, y, s=1)
+                ys = s(x)
+                rc1_list = self.rc_list(x, ys)
+                
+                xs = x[:-1]
+                print('1----length rc1 = {}, xs= {}'.format(len(rc1_list), len(xs)))
+                s = UnivariateSpline(xs, rc1_list, s=1)
+                ys = s(x)
+                rc1_list = ys
+                print('2---length rc1 = {}, xs= {}'.format(len(rc1_list), len(xs)))
+                rc2_list = self.rc_list(x, ys) 
+                
+                #print('length rc2 = {}'.format(len(rc2_list)))
+                xs = x[:-1]
+                s = UnivariateSpline(xs, rc2_list, s=1)
+                ys = s(x)
+                rc2_list = ys
+            #Spline XY, calc RC1, spline RC1, calc RC2
+            elif i == 3:
+                s = UnivariateSpline(x, y, s=1)
+                ys = s(x)
+                rc1_list = self.rc_list(x, ys)
+                
+                xs = x[:-1]
+                s = UnivariateSpline(xs, rc1_list, s=1)
+                ys = s(x)
+                rc1_list = ys
+                rc2_list = self.rc_list(x, ys) 
+                
+            #Spline XY, calc RC1, calc RC2
+            elif i == 1:
+                s = UnivariateSpline(x, y, s=1)
+                ys = s(x)
+                y = ys
+                rc1_list = self.rc_list(x, ys)
+                rc2_list = self.rc_list(x, rc1_list)      
+            #Calc XY, spline RC1, calc RC2
+            elif i == 2:
+                rc1_list = self.rc_list(x, y)  
+                xs = x[:-1]
+                s = UnivariateSpline(xs, rc1_list, s=1)
+                ys = s(x)
+                rc1_list = ys
+                rc2_list = self.rc_list(x, ys) 
+            elif i == 0:
+                #Calculate RC1 and RC2 based on raw input data 
+                rc1_list = self.rc_list(x, y)
+                rc2_list = self.rc_list(x, rc1_list)
+            else:
+                print('Error in method calculate.all in Thesis.py')
+                print(i)
+                
+            #format: [total surface, total neg serface, total pos surface]
+            xs = x[:-2]
+            temp = list(zip(xs, rc2_list))
+            surfaces_list = self.surface_list(temp)
+             
+            #oordeel = self.beoordeel_grafiek(surfaces_list, surface_total[0])
+            
+            data = x, y, rc1_list, rc2_list, surfaces_list
+            data_list.append(data)
+        return data_list
+    
+#----------------------------------------------------
+#--------- Graph Modification algorithms ------------
+#----------------------------------------------------
+        
+    #Scale function a onto coordinates of function b
+    def scale(self, a, b, y_scale = False):   
+        if y_scale == False:
+            x_last_b = 100   
+            if len(b) > 1:
+                last = len(b) - 1
+                x_last_b = b[last][0]
+                
+            last = len(a) - 1
+            x_last_a = a[last][0]
+            
+            scale = x_last_b / x_last_a 
+         
+            
+            for i in range(len(a)):
+                a[i][0] *= scale
+                a[i][1] *= scale
+                       
+        else:
+            x_last_b = 100   
+            y_last_b = 100
+            
+            if len(b) > 1:
+                last = len(b) - 1
+                x_last_b = b[last][0]
+                y_last_b = b[last][1]
+           
+            last = len(a) - 1
+            x_last_a = a[last][0]
+            y_last_a = a[last][1]
+            
+            scale_x = x_last_b / x_last_a 
+            scale_y = y_last_b / y_last_a
+         
+            
+            for i in range(len(a)):
+                a[i][0] *= scale_x
+                a[i][1] *= scale_y
+                
+        return a
+            
+    def translate_to_origin(self, points):
+        x0 = points[0][0]
+        y0 = points[0][1]
+        
+        for i in range(len(points)):
+            points[i][0] -= x0
+            points[i][1] -= y0
+            
+        return points
+        
+    def reduce_points(self, pixel_coords, nr_points):
+        points = []
+        #We want to spread 50 points evenly across the raw data
+        #Deel de data set in 50 (pas op restwaarde) 
+        jumpsize = len(pixel_coords) / nr_points
+        if jumpsize < 1:
+            print('error: jumpsize < 1')
+            return
+        
+        counter = 0
+        for i in range(nr_points):
+            index = int(counter)
+    
+            points.append(pixel_coords[index])
+            counter += jumpsize
+        #Elk nieuw punt krijgt avg y en x in die zone
+        
+        return points
+    
+#----------------------------------------------------
+#------------  Basic calculations  ------------------
+#----------------------------------------------------
+    #Computes total surface found in given graph
+    def surfaces(self, x, y):
+        data = list(zip(x, y))
+        
+        total = 0
+        neg = 0
+        pos = 0
+        
+        for i in range(len(data) -1):
+            temp = self.surface(data[i], data[i+1])
+            
+            total += temp[0]
+            neg += temp[1]
+            pos += temp[2]
+            
+        return total, neg, pos
+    
+    #Creates array of surface distribution
     def surface_list(self, rc2_list):
         total = 0
         neg = 0
@@ -604,8 +630,10 @@ class Calculations:
             pos += temp[2]
 
         surfaces = [total, neg, pos]
+        print('SURFACES = {}'.format(surfaces))
         return surfaces
     
+    #Calculates surface between two points
     def surface(self, a, b):    
         a_x = a[0]; a_y = a[1]; b_x = b[0]; b_y = b[1]
         
