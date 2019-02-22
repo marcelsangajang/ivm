@@ -35,8 +35,10 @@ class Gui:
         self.h_canvas = 500
 
         self.titles_table = ['Index', 'X', 'Y', 'RC1', 'RC2']
-        self.titles_tabs = ['f(x)', 'RC1', 'RC2']
-        self.titles_mastertabs = ['Raw data', 'After splining f(x)', 'After splining RC1', 'After splining f(x) and RC1', 'After splining f(x), RC1 and RC2']
+        self.titles_tabs = ['f(v)', "f '(v)", "f ''(v)"]
+        self. a = ['Raw data', 'After splining f(v)', "After splining RC1", "After splining f (v) and RC1", "After splining f (v), RC1 and RC2"]
+        self.b = ['Raw data', 'After splining f(v)']
+        self.titles_mastertabs = self.b
         self.table_h = 20
         self.table_w = len(self.titles_table)
         
@@ -161,13 +163,7 @@ class Gui:
             nr_points = 40
         else:
             nr_points = int(temp)
-        
-        if nr_points < 10:
-            print('Cant use N < 10, using N = 10')
-            nr_points = 10
-        elif nr_points >= len(self.raw_points):
-            print('Cant use N > points in raw data, using N = 10')
-            nr_points = 10
+
 
         #Translate to origin
         self.raw_points = self.calc.translate_to_origin(self.raw_points)
@@ -200,7 +196,7 @@ class Gui:
         #Calculations
         self.raw_data = self.calc.calculate_all(self.raw_points, self.titles_mastertabs, nr_points)
         norm_data = self.calc.calculate_all(norm_points, self.titles_mastertabs, nr_points)
-        
+
         """Create window"""
         window = Tk()
         window.grid()
@@ -225,7 +221,7 @@ class Gui:
             
             """Add frame for table"""
             table = Frame(tab, bg="white", borderwidth=1, relief="solid")
-            table.grid(row=0, column=1, sticky=N+E+W+S)
+            #table.grid(row=0, column=1, sticky=N+E+W+S)
             self.update_table(table, self.data, self.titles_table)
             #table.update()
            
@@ -411,14 +407,14 @@ class Gui:
         fig = Figure(figsize=(6,6))
         a = fig.add_subplot(111)
        
-        line1 = a.plot(x, y,color='blue', label='Data')
-        line2 = a.plot(xn, yn, color='red', label='Norm')
-        line3 = a.plot(x, ys, color='darkorange', label='Apply spline on Data')
+        line1 = a.plot(x, y,color='blue', label='f(v)')
+        line2 = a.plot(xn, yn, color='red', label='n(v)')
+        #line3 = a.plot(x, ys, color='darkorange', label='Apply spline on Data')
         
         
-        lines = [line1, line2, line3]
+        lines = [line1, line2]
         #Adds p line to rc2 graph
-        if title == 'RC2' and self.tk_lines.get() == 1:
+        if title == "f ''(v)" and self.tk_lines.get() == 1:
             p = self.tk_lines_value.get()
             p = re.sub('[^0-9,.]', '', p)
             print(p)
@@ -428,13 +424,13 @@ class Gui:
             p = float(p)
             p1 = [p]*len(x)
             p2 = [-p]*len(x)
-            line4 = a.plot(x, p1,color='orange', label='y = p')
-            line5 = a.plot(x, p2,color='orange', label='y = -p')
-            lines = [line1, line2, line3, line4, line5]
+            line4 = a.plot(x, p1,color='orange', label='y = s')
+            line5 = a.plot(x, p2,color='orange', label='y = -s')
+            lines = [line1, line2, line4, line5]
         
         a.set_title (title, fontsize=16)
-        a.set_ylabel("Y", fontsize=14)
-        a.set_xlabel("X", fontsize=14)
+        a.set_ylabel("h", fontsize=14)
+        a.set_xlabel("v", fontsize=14)
         #a.set_aspect('equal')
         a.grid(True)
         a.axhline(y=0, color='k')
