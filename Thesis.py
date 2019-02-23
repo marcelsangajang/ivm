@@ -23,13 +23,185 @@ import itertools
 
 class Calculations:
     def __init__(self):
+        
         pass
     
 #----------------------------------------------------
 #---------- Decision making algorithms---------------
 #----------------------------------------------------
             
-   
+    def calculate_all(self, drawing_data, norm_data, nr_points = 40):
+        titles = ['f(v) (Raw data)', 'f(v) (Splined)']
+        data_list = []
+        data_listn = []
+        feedback_list = []
+        #Creates array for X and array for Y
+        f1 = self.reduce_points(drawing_data, nr_points)
+        f1 = list(zip(*f1))
+        x = f1[0]
+        y = f1[1]
+        
+        f2 = self.reduce_points(norm_data, nr_points)
+        f2 = list(zip(*f2))
+        xn = f2[0]
+        yn = f2[1]
+        
+        
+        for i in range(len(titles)):
+            feedback = ''
+            #Tests for concept 1, if function is invalid all other concepts dont need to be tested
+            if self.concept_1(x) == False:
+                feedback += 'Concept 1: Failed. No further testing\n'
+                data = x, y
+                datan = xn, yn
+                data_list.append(data)
+                data_listn.append(datan)
+                feedback_list.append(feedback)
+                break
+                
+            feedback += 'Concept 1: Succes\n'
+            
+            #Calculate functions for raw data
+            if i == 0:                
+                temp = self.test_concepts(x, y, xn, yn)
+            #Calculate functions for splined f(v)
+            elif i == 1:
+                #drawing
+                s = UnivariateSpline(x, y)
+                xs = x
+                ys = s(xs)
+            
+                #norm
+                sn = UnivariateSpline(xn, yn)
+                xsn = xn
+                ysn = sn(xn)
+        
+                temp = self.test_concepts(xs, ys, xsn, ysn)
+                
+         
+            feedback += temp[0]
+            data = temp[1]
+            datan = temp[2]
+            
+            data_list.append(data)
+            data_listn.append(datan)
+            feedback_list.append(feedback)
+            
+            #Add sub functions
+            if temp[3] != None:
+                #q = len(temp[3])
+                q = 2
+                for i in range(q):
+                    a = list(zip(*temp[3][i]))
+                    an = list(zip(*temp[4][i]))
+                    subx = a[0] #x
+                    suby = a[1] #y
+                    subrc1 = self.rc_list(subx, suby)
+                    subrc2 = self.rc_list(subx, subrc1)
+                    subdata = subx, suby, subrc1, subrc2
+                    data_list.append(subdata)
+                    
+                    subxn = an[0] #x
+                    subyn = an[1] #y
+                    subrc1n = self.rc_list(subxn, subyn)
+                    subrc2n = self.rc_list(subxn, subrc1n)
+                    subdatan = subxn, subyn, subrc1n, subrc2n
+                    data_listn.append(subdatan)
+                    
+            
+            print(data)
+                
+            
+        #format: [total surface, total neg serface, total pos surface]
+        #xs = x[:-2]
+        #temp = list(zip(xs, rc2))
+        #surfaces_list = self.surface_list(temp)
+         
+        #oordeel = self.beoordeel_grafiek(surfaces_list, surface_total[0])
+            
+
+        return data_list, data_listn, titles, feedback_list
+    
+#----------------------------------------------------
+#--------- Graph Modification algorithms ------------
+#----------------------------------------------------
+        
+    def test_concepts(self, x, y, xn, yn):
+        rc1 = self.rc_list(x, y)
+        rc2 = self.rc_list(x, rc1)
+        rc1n = self.rc_list(xn, yn)
+        rc2n = self.rc_list(xn, rc1n)
+        data = x, y, rc1, rc2
+        datan = xn, yn, rc1n, rc2n
+        feedback = ''
+                
+        #Test concept 2
+        if self.concept_2(rc1) == False:
+            feedback += 'Concept 2: Failed\n'
+        else:
+            feedback += 'Concept 2: Succes\n'
+            
+        #Test concept 3
+        temp = self.concept_3(x, rc2, xn, rc2n)
+        if temp[0] == False:
+            feedback += 'Concept 3: Failed\n'
+            feedback += 'Concavity f(v): {}\n'.format(temp[1])
+            feedback += 'concavity n(v): {}\n'.format(temp[2])
+            feedback += 'Concept 4: None\n'
+            feedback += 'Concept 5: None\n'
+            feedback += 'Concept 6: None\n'
+            return feedback, data, datan, None, None
+        else:
+            feedback += 'Concept 3: Succes\n'
+            feedback += 'f(v): {}\n'.format(temp[1])
+            feedback += 'n(v): {}\n'.format(temp[2])
+            feedback += 'Concept 4: None\n'
+            
+        #First scale function before analyzing concept 5
+        points = list(zip(x, y))
+        p = self.translate_to_origin(points)
+        p = self.scale(p)
+        
+        pointsn = list(zip(xn, yn))
+        pn = self.translate_to_origin(pointsn)
+        pn = self.scale(pn)
+        
+        temp = list(zip(*p))
+        tempn = list(zip(*pn))
+        
+        x = temp[0]
+        y = temp[1]
+        xn = tempn[0]
+        yn = tempn[1]
+        print('x last and y last are: {}, {}'.format(x[-1], y[-1]))
+        rc1 = self.rc_list(x, y)
+        rc2 = self.rc_list(x, rc1)
+        rc1n = self.rc_list(xn, yn)
+        rc2n = self.rc_list(xn, rc1n)
+        
+        #Test concept 5
+        temp = self.concept_5(x, y, rc2, xn, yn, rc2n)
+        if temp[0] == False:
+            feedback += 'Concept 5: Failed\n'     
+        else:
+            feedback += 'Concept 5: Succes\n'
+            
+        feedback += temp[3]
+        
+        data = x, y, rc1, rc2
+        datan = xn, yn, rc1n, rc2n
+        
+        
+        #Test concept 6
+        ip = self.find_inflection_points(x, y, rc2)
+        ip_n = self.find_inflection_points(xn, yn, rc2n)
+        subfunctions = self.concept_6(x, y, xn, yn, ip, ip_n)
+        sub_drawing = subfunctions[0]
+        sub_norm = subfunctions[1]
+        feedback += subfunctions[2]
+        
+        #print('subf last{}'.format(sub_drawing[-1]))
+        return feedback, data, datan, sub_drawing, sub_norm
     def concept_6(self, x, y, x_n, y_n, ip, ip_n):
         previous_index = 0
         previous_index_n = 0
@@ -76,9 +248,9 @@ class Calculations:
             temp = self.scale(temp)
             norm.append(temp)
             
-        return drawing, norm
+        return drawing, norm, ''
 
-        print('subf length {}'.format(len(sub_functions_x)))
+
         for i in range(len(drawing)):
             temp = list(zip(*drawing[i]))
             plt.plot(temp[0], temp[1], 'blue', lw=3)
@@ -101,7 +273,7 @@ class Calculations:
 
         
         if len(inflection_points) == len(inflection_points_n):
-            final_str = '\nConcept 5: nr of inflection points: f(v) = {} n(v), = {}\n'.format(len(inflection_points), len(inflection_points_n))
+            final_str = 'Nr of inflection points: f(v) = {} n(v), = {}\n'.format(len(inflection_points), len(inflection_points_n))
             ip_match = True
             for i in range(len(inflection_points)):
                 v_difference = round(inflection_points[i][0] - inflection_points_n[i][0], 2)
@@ -109,13 +281,14 @@ class Calculations:
                 final_str += 'Coords: f(v)=({}, {}), n(v)({}, {}) Deviation v={} h={}\n'.format(inflection_points[i][0], inflection_points[i][1], inflection_points_n[i][0], inflection_points_n[i][1], v_difference, h_difference)
                 
                 if abs(v_difference) > max_difference or abs(h_difference) > max_difference:    
-                    ip_match = True
+                    ip_match = False
         
         else:
             ip_match = False
             final_str = '\nConcept 5: nr of inflection points does not match: f(v) = {}, n(v)= {}\n'.format(len(inflection_points), len(inflection_points_n))
             
-        return final_str, inflection_points, inflection_points_n, ip_match
+        #temp = + final_str
+        return ip_match, inflection_points, inflection_points_n, final_str
     
     def find_inflection_points(self, x, y, rc2):
         inflection_points = []
@@ -304,182 +477,7 @@ class Calculations:
 #----------------------------------------------------
 #----------------------------------------------------
         
-    def calculate_all(self, drawing_data, norm_data, nr_points = 40):
-        titles = ['f(v) (Raw data)', 'f(v) (Splined)']
-        data_list = []
-        data_listn = []
-        feedback_list = []
-        #Creates array for X and array for Y
-        f1 = self.reduce_points(drawing_data, nr_points)
-        f1 = list(zip(*f1))
-        x = f1[0]
-        y = f1[1]
-        
-        f2 = self.reduce_points(norm_data, nr_points)
-        f2 = list(zip(*f2))
-        xn = f2[0]
-        yn = f2[1]
-        
-        
-        data = x, y
-        datan = xn, yn
-        for i in range(len(titles)):
-            feedback = ''
-            #Tests for concept 1, if function is invalid all other concepts dont need to be tested
-            if self.concept_1(x) == False:
-                feedback += 'Concept 1: Failed. No further testing\n'
-                data_list.append(data)
-                data_listn.append(datan)
-                feedback_list.append(feedback)
-                break
-                
-            feedback += 'Concept 1: Succes\n'
-            
-            #Calculate functions for raw data
-            if i == 0:
-                rc1 = self.rc_list(x, y)
-                rc2 = self.rc_list(x, rc1)
-                
-                rc1n = self.rc_list(xn, yn)
-                rc2n = self.rc_list(xn, rc1n)
-                
-                data = x, y, rc1, rc2
-                datan = xn, yn, rc1n, rc2n
-                
-                feedback += self.test_concepts(data, datan)
-            #Calculate functions for splined f(v)
-            elif i == 1:
-                #drawing
-                s = UnivariateSpline(x, y)
-                xs = x
-                ys = s(xs)
-                rc1 = self.rc_list(xs, ys)
-                rc2 = self.rc_list(xs, rc1) 
-                data = xs, ys, rc1, rc2
-                
-                #norm
-                sn = UnivariateSpline(xn, yn)
-                xsn = xn
-                ysn = sn(xn)
-                rc1n = self.rc_list(xsn, ysn)
-                rc2n = self.rc_list(xsn, rc1n)
-                datan = xsn, ysn, rc1n, rc2n
-                
-                feedback += self.test_concepts(data, datan)
-         
-            
-            data_list.append(data)
-            data_listn.append(datan)
-            feedback_list.append(feedback)
-                
 
-
-
-            
-  
-            
-                
-            
-          
-        
-
-        
-    #Spline XY, calc RC1, calc RC2
- 
-
-        
-
-            
-
-
-        
-
-   
-        """
-        #Calculate RC1 and RC2
-        #Spline XY, calculate RC1, spline RC1, calc RC2, spline RC2
-        elif i == 4:
-            s = UnivariateSpline(x, y, s = 1)
-            ys = s(x)
-            rc1 = self.rc_list(x, ys)
-            
-            xs = x[:-1]
-            #print('1----length rc1 = {}, xs= {}'.format(len(rc1), len(xs)))
-            s = UnivariateSpline(xs, rc1, s = 1)
-            ys = s(x)
-            rc1 = ys
-           
-            #print('2---length rc1 = {}, xs= {}'.format(len(rc1), len(xs)))
-            rc2 = self.rc_list(x, ys) 
-            
-            #print('length rc2 = {}'.format(len(rc2)))
-            xs = x[:-1]
-            s = UnivariateSpline(xs, rc2, s = 1)
-            ys = s(x)
-            rc2 = ys
-        #Spline XY, calc RC1, spline RC1, calc RC2
-        elif i == 3:
-            s = UnivariateSpline(x, y)
-            ys = s(x)
-            rc1 = self.rc_list(x, ys)
-            
-            xs = x[:-1]
-            s = UnivariateSpline(xs, rc1)
-            ys = s(x)
-            rc1 = ys
-            rc2 = self.rc_list(x, ys) 
-            
-
-        #Calc XY, spline RC1, calc RC2
-        elif i == 2:
-            rc1 = self.rc_list(x, y)  
-            xs = x[:-1]
-            s = UnivariateSpline(xs, rc1)
-            ys = s(x)
-            rc1 = ys
-            rc2 = self.rc_list(x, ys) 
-        else:
-            print('Error in method calculate.all in Thesis.py')
-            print(i)
-            """
-            
-        #format: [total surface, total neg serface, total pos surface]
-        #xs = x[:-2]
-        #temp = list(zip(xs, rc2))
-        #surfaces_list = self.surface_list(temp)
-         
-        #oordeel = self.beoordeel_grafiek(surfaces_list, surface_total[0])
-            
-
-        return data_list, data_listn, titles, feedback_list
-    
-#----------------------------------------------------
-#--------- Graph Modification algorithms ------------
-#----------------------------------------------------
-        
-    def test_concepts(self, data, datan):
-        x, y, rc1, rc2 = data
-        xn, yn, rc1n, rc2n = datan
-        feedback = ''
-                
-        #Test concept 2
-        if self.concept_2(rc1) == False:
-            feedback += 'Concept 2: Failed\n'
-        else:
-            feedback += 'Concept 2: Succes\n'
-            
-        #Test concept 3
-        temp = self.concept_3(x, rc2, xn, rc2n)
-        if temp[0] == False:
-            feedback += 'Concept 3: Failed\n'
-            feedback += 'f(v): {}\n'.format(temp[1])
-            feedback += 'n(v): {}\n'.format(temp[2])
-        else:
-            feedback += 'Concept 3: Succes\n'
-            feedback += 'f(v): {}\n'.format(temp[1])
-            feedback += 'n(v): {}\n'.format(temp[2])
-        
-        return feedback
                 
         
     def concept_3(self, x, rc2, x_n, rc2_n, straight_lines = False):
@@ -523,10 +521,10 @@ class Calculations:
         
     #Scale function a onto coordinates of function b
     def scale(self, a, b = None, y_scale = False):   
-            
+        temp = []
         if b == None or y_scale != False:
-            x_last_b = 100   
-            y_last_b = 100
+            x_last_b = 100.0
+            y_last_b = 100.0
             
           #  if len(b) > 1:
            #     last = len(b) - 1
@@ -542,8 +540,9 @@ class Calculations:
          
             
             for i in range(len(a)):
-                a[i][0] *= scale_x
-                a[i][1] *= scale_y
+                t1 = a[i][0] * scale_x
+                t2 = a[i][1] * scale_y
+                temp.append([t1, t2])
                 
         else:
             x_last_b = 100   
@@ -558,10 +557,11 @@ class Calculations:
          
             
             for i in range(len(a)):
-                a[i][0] *= scale
-                a[i][1] *= scale
+                t1 = a[i][0] * scale
+                t2 = a[i][1] * scale
+                temp.append([t1, t2])
                                      
-        return a
+        return temp
             
     def translate_to_origin(self, points, concept5 = False):
         #print('\n before: \n {}'.format(points))

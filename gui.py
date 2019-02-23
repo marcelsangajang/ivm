@@ -215,7 +215,8 @@ class Gui:
         mastertabs = ttk.Notebook(window)
   
         """Graphs (tabs)"""
-        for i in range(len(graph_titles)):
+        print(len(self.raw_data))
+        for i in range(len(self.raw_data)):
             #Create tab
             
             tab = ttk.Frame(mastertabs, borderwidth=1, relief="raised")
@@ -233,11 +234,11 @@ class Gui:
             """Add frame for graphs"""
             box_mid = Frame(tab, bg="white", borderwidth=1, relief="solid")
             box_mid.grid(row=0, column=0, sticky=W+E+N+S)
-            self.x = self.raw_data[0][0]
+            self.x = self.data[0]
             y_coords = self.raw_data[i][1:]
          
             
-            x_norm = norm_data[0][0]
+            x_norm = norm[0]
             y_coords_norm = norm[1:]
      
             self.update_graphs(box_mid, self.x, y_coords, x_norm, y_coords_norm, self.titles_tabs)
@@ -246,18 +247,22 @@ class Gui:
             """Add text to mainscreen"""
             T = Text(tab)
 
-            print('feedback = {}'.format(feedback))
             T.grid(row=0, column=2, sticky=N+E+S+W)
-            T.insert(END, feedback[i])
+            if i < 2:
+                T.insert(END, feedback[i])
             #surface_data = self.data[len(self.data)-1]
             #surface_data_norm = list(norm[len(norm) - 1])
             #string = self.calc.beoordeel(self.data, norm, p)
           
             
   
+            if i > 1:
+                tmp = 'sub function'
+            else:
+                tmp = graph_titles[i]
             
             #add tab
-            mastertabs.add(tab, text=graph_titles[i])    
+            mastertabs.add(tab, text=tmp)    
         mastertabs.grid(sticky=N)  # grid to make visible
 
     def update_table(self, root, data, titles):
@@ -276,7 +281,7 @@ class Gui:
                # while len(tmp[i]) < len(tmp[0]):
                   #  tmp[i].append(None)
                     
-            print('lenghts: data:{}, x: {}, y: {}, rc1:{}, rc2:{}'.format(len(data),len(data[0]), len(data[1]), len(data[2]), len(data[3])))
+            #print('lenghts: data:{}, x: {}, y: {}, rc1:{}, rc2:{}'.format(len(data),len(data[0]), len(data[1]), len(data[2]), len(data[3])))
             c = 0
             nc = 0
             
@@ -299,7 +304,7 @@ class Gui:
             #table.update()
             root.update()
         
-            print('getallen counter = {}, none counter = {}'.format(c, nc))
+            #print('getallen counter = {}, none counter = {}'.format(c, nc))
       
         
     #Updates the popup menus choices (which are files stored in map ./graph/)
@@ -409,8 +414,7 @@ class Gui:
         
     #Plots graph of a function, and norm a function
     def plot(self, root, x, y, xn, yn, title):   
-        s = UnivariateSpline(x, y, s=1)
-        ys = s(x)
+   
 
         fig = Figure(figsize=(6,6))
         a = fig.add_subplot(111)
@@ -468,7 +472,7 @@ class Gui:
             # legend proxy line, and toggle the visibility
             legline = event.artist
             origline = lined[legline]
-            print(origline[0])
+            #print(origline[0])
             vis = not origline[0].get_visible()
             origline[0].set_visible(vis)
             # Change the alpha on the line in the legend so we can see what lines
