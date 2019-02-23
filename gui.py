@@ -159,17 +159,19 @@ class Gui:
             
         temp = re.sub("\D", "", nr_points)
         
+        """
         if len(temp) == 0:
             nr_points = 40
         else:
             nr_points = int(temp)
-
+        """
 
         #Translate to origin
         self.raw_points = self.calc.translate_to_origin(self.raw_points)
         norm_points = self.calc.translate_to_origin(norm_points)
         
         #Scale functions to different coordinate system
+        """
         scaling_method = self.tk_scale.get()
         scale_y = self.tk_scale_to_y.get()
         print(self.scale.get())
@@ -190,12 +192,15 @@ class Gui:
                 else: #scale to x=100
                     self.raw_points = self.calc.scale(self.raw_points, [0], True)
                     norm_points = self.calc.scale(norm_points, [0], True)
-                
+         """       
                 
                 
         #Calculations
-        self.raw_data = self.calc.calculate_all(self.raw_points, self.titles_mastertabs, nr_points)
-        norm_data = self.calc.calculate_all(norm_points, self.titles_mastertabs, nr_points)
+        temp = self.calc.calculate_all(self.raw_points, norm_points)
+        self.raw_data = temp[0]
+        norm_data = temp[1]
+        graph_titles = temp[2]
+        feedback = temp[3]
 
         """Create window"""
         window = Tk()
@@ -210,7 +215,7 @@ class Gui:
         mastertabs = ttk.Notebook(window)
   
         """Graphs (tabs)"""
-        for i in range(len(self.titles_mastertabs)):
+        for i in range(len(graph_titles)):
             #Create tab
             
             tab = ttk.Frame(mastertabs, borderwidth=1, relief="raised")
@@ -230,26 +235,29 @@ class Gui:
             box_mid.grid(row=0, column=0, sticky=W+E+N+S)
             self.x = self.raw_data[0][0]
             y_coords = self.raw_data[i][1:]
-            y_coords = y_coords[:-1]
+         
             
             x_norm = norm_data[0][0]
             y_coords_norm = norm[1:]
-            y_coords_norm = y_coords_norm[:-1]
+     
             self.update_graphs(box_mid, self.x, y_coords, x_norm, y_coords_norm, self.titles_tabs)
             #add tab
             
             """Add text to mainscreen"""
             T = Text(tab)
+
+            print('feedback = {}'.format(feedback))
             T.grid(row=0, column=2, sticky=N+E+S+W)
+            T.insert(END, feedback[i])
+            #surface_data = self.data[len(self.data)-1]
+            #surface_data_norm = list(norm[len(norm) - 1])
+            #string = self.calc.beoordeel(self.data, norm, p)
+          
             
-            surface_data = self.data[len(self.data)-1]
-            surface_data_norm = list(norm[len(norm) - 1])
-            string = self.calc.beoordeel(self.data, norm, p)
-            T.insert(END, string)
   
             
             #add tab
-            mastertabs.add(tab, text=self.titles_mastertabs[i])    
+            mastertabs.add(tab, text=graph_titles[i])    
         mastertabs.grid(sticky=N)  # grid to make visible
 
     def update_table(self, root, data, titles):

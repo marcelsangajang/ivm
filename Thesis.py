@@ -29,322 +29,7 @@ class Calculations:
 #---------- Decision making algorithms---------------
 #----------------------------------------------------
             
-    def beoordeel(self, graph, norm, p):
-        x = graph[0]
-        y = graph[1]
-        rc1 = graph[2]
-        rc2 = graph[3]
-        
-        x_n = norm[0]
-        y_n = norm[1]
-        rc1_n = norm[2]
-        rc2_n = norm[3]
-        
-        
-        #Get sequance of behaviour        
-        function_behaviour = self.find_function_behaviour(x, rc2, p)
-        norm_behaviour = self.find_function_behaviour(x_n, rc2_n, p)
-        
-        #Adds end points to the behaviour array
-        function_behaviour.append(['END', len(rc2) - 1])
-        norm_behaviour.append(['END', len(rc2_n) - 1])
-        
-        str4 = self.print_behaviour(function_behaviour, norm_behaviour, x, x_n)
-        
-        #Remove straight linezones
-        if p != '0':
-            fb = []
-            nb = []
-            for a in function_behaviour:
-                if a[0] != '0':
-                    fb.append(a)
-                    
-            for a in norm_behaviour:
-                if a[0] != '0':
-                    nb.append(a)
-            
-            str5 = self.print_behaviour(fb, nb, x, x_n)
-            function_behaviour = fb
-            norm_behaviour = nb
-        #Check to see if desired pattern matched exactly
-        """ WHEN DOING SURFACE CALCULATIONS, DATA FROM STRAIGHT LINE HAS BEEN CUT OUT"""
-        pattern_match = 1
-        reasons = {
-                'number_of_behaviours' : True,
-                'direction_of_behaviours' : False,
-                'nr_txt' : '',
-                'dir_txt' : ''
-                }
-        
-
-        decision = 'TRUE'
-        oordeel = ''
-     
-        for i in range(len(x) - 1):
-            if x[i + 1] <= x[i]:
-                decision = 'FALSE'
-                break
-            
-        
-        oordeel += 'Step 1: {} \n'.format(decision)
-        decision = 'TRUE'
-        for i in range(len(y) - 1):
-            if y[i+1] <= y[i]:
-                decision = 'FALSE'
-                break
-            
-        oordeel += 'Step 2: {} \n'.format(decision)
-        
-        #if decision == 'INCORRECT':
-            #strx = '\n--- STEP 1 FAILED ---\n'
-            #strx += '  A: Student does not understand the problem at all (If deviation is big)\n'
-            #strx += '  B: Student understands problem, made minor mistake (If deviation is small\n'
-            #strx += '  Fix B by curve fitting, then repeat step 1\n'
-            #strx += '  If still incorrect -> A'
-           # strx += '  Redraw the graph for further analysis\n'
-            #oordeel += strx
-            #return oordeel
-       # else:
-            #oordeel += '\n--- Step 1: SUCCES ---\n'
-        
-        str1 = ' '
-        #str1 += '\nLevel 1.2\n'
-        
-        #Numbers of behaviours do not match
-        if len(function_behaviour) == len(norm_behaviour):
-            decision = 'CORRECT'
-            #str1 += '1.1) Number of behaviours: {} (f(x)={}, norm={})\n'.format(decision, len(function_behaviour)-1, len(norm_behaviour)-1)
-            #str1 += ' -Student understands that depending on the shape of the vase, \n  the water surface speed will vary.\n -Student draws correct number of speed transitions according to vase\n'
-        else:
-            pattern_match = 0
-            reasons['number_of_behaviours'] = False
-            decision = 'INCORRECT'
-            #str1 += '1.1) Number of behaviours: {} (f(x)={}, norm={})\n'.format(decision, len(function_behaviour), len(norm_behaviour))
-            
-            #str1+= '  This can mean one of three things:\n'
-            #str1 += '  A: The drawing is sloppy but could be sort of correct\n'
-            #str1 += '  B: The drawing contains straight lines rather than curves\n'
-            #str1 += '  C: The drawing is incorrect\n'
-            #reasons['nr_txt'] += str1
-            
-        str2 = ''
-        
-        #Check if the behaviour sequence is the same
-        for i in range(len(function_behaviour)):
-            if function_behaviour[i][0] != norm_behaviour[i][0]:
-                pattern_match = 0
-                break
-           
-        
-        if pattern_match == 1:
-            str2 += 'Step 3: TRUE\n'
-            reasons['direction_of_behaviours'] = True
-            str2 += str4 + '\n'
-            #str2 += '  Student DOES understand that:\n'
-        else:
-            str2 += 'Step 3: FALSE\n'
-            str2 += str4 + '\n'
-            #str2 += '  Student does NOT understand that:\n'
-            
-        
-
-       # str2+= ' -Vase gets wider, speed at which surface rises slows down continiously,\n  resulting in a concave drawing\n'
-       # str2+= ' -Vase gets smaller, speed at which surface rises slows down continiously,\n  resulting in a convex drawing\n'
-        #str2+= ' -Vase width doesnt change, speed at which surface rises is constant,\n  resulting in a straight line in the drawing\n'
-        reasons['dir_txt'] += str2
-
-                
-        final_str = str2
-
-        
-        #stra = '\nStep 3\n'
-        #stra += 'Deviation '
-        #strb = '\nStep 4\n'
-        #final_str += stra + strb
-        #if reasons['number_of_behaviours'] == False:
-            
-            #str2 += '\n--- Step 2: FAILED ---\n'
-            
-            
-            #str2 += '  Test A, if A fails, Test B, if B fails -> C is True \n'
-            
-            #if p == '0':
-            #    str2 += '  -Test A: press "dectecting straight lines" checkbox, select proper p value,\n  then repeat this step. If A still fails, test B\n'
-            #else:
-            #    str2 += '  -A tested with p = {}, still incorrect, test for B'
-            #    str2 += '  -Test B: To be determined\n'
-        #elif reasons['direction_of_behaviours'] == False:
-            
-        #else:
-            #str2 += '\n--- Step 2: SUCCES ---\n'
-            
-        
-    
-        #----STEP 3 -----
-        
-        #Exact pattern match
-        if pattern_match == 1:
-            #Pattern matches, Check to see if length of found surfaces are close enough, compare surface distributions, compare surface shapes (rc3)
-            #Check inner proporions:
-            #Length of subgraphs correct? => sais something about knowing when a directional change takes place in the vase, and correctly drawing it in the right part of the graph
-            #Inner surface distribution correct (same proportions as norm)? => 
-            #Total surface distribution close to norm? =>
-            #Shape of RC2 correct? => Student recognizes when walls vase are getting smaller, is this happening increasingly or decreasingly
-            #All of the above correct? perfect match
-            #string += 'Pattern: Perfect match, comparing lengths of subgraphs...\n'
-            
-            #Add index of Xcoord of last element, so last subgraph length can be computed
-            st = 'Properties of type of behaviour:\n'
-            #st_n = 'Norm:\n'
-            st += '  Lengths:\n'
-            #st_n += '  Function behaviour:\n'
-            l = []
-            ln = []
-            answers = []
-            answer_total = 0
-            
-
-            
-            #Finds the length of each subgraph 
-            """
-            for i in range(len(function_behaviour) - 1):
-                behaviour = function_behaviour[i][0]
-                if behaviour == 'concave':
-                    behaviour = '-'
-                elif behaviour == 'convex':
-                    behaviour = '+'
-                else:
-                    behaviour = '0'
-                    
-                index_next = function_behaviour[i+1][1] 
-                index = function_behaviour[i][1]
-                length = x[index_next] - x[index]
-                #st += '    {} ({},{})\n'.format(behaviour, round(x[index_next], 2), round(y[index_next], 2))
-                
-                l.append(length)
-                
-                behaviour = norm_behaviour[i][0]
-                if behaviour == 'concave':
-                    behaviour = '-'
-                elif behaviour == 'convex':
-                    behaviour = '+'
-                else:
-                    behaviour = '0'
-                index_next = norm_behaviour[i+1][1] 
-                index = norm_behaviour[i][1]
-                length_norm = x_n[index_next] - x_n[index]
-                dev = None
-                st += '    {}, {} vs {}, ({}%)\n'.format(behaviour, round(length, 2), round(length_norm, 2), dev)
-               # st_n += '    {} ({},{})\n'.format(behaviour, round(norm_x[index_next], 4), round(y[index_next], 4))
-                #st_n += '    {}, length = {}, x = {} to {}, i = {} to {}\n'.format(behaviour, round(length_norm, 2), round(x_n[index], 2), round(x_n[index_next], 2), index, index_next)
-                ln.append(length_norm)
-                
-                answer = length / length_norm
-                answer = abs(answer - 1.0)
-                answers.append(answer)
-                answer_total += answer
-                
-            #Decide if the lengths are close enough
-            avg_deviation = round(100*answer_total / (len(function_behaviour) - 1), 2)
-            
-            str2 += st
-            #str2 += st_n
-            
-            str2 += '\nComparison:\n'
-            str2 += '  Behaviour lenghts\n'
-            str2 += '    avg deviation = {}%\n'.format(avg_deviation)
-            """
-            
-        st = '\n--- DATA --- \n'
-        st_n = '\n'
-         
-        #graph surfaces
-        #st += '  Surface graph:\n'
-        #st_n += '  Surface norm:\n'
-        
-        #F(X) surface
-        surface1 = self.surfaces(x, y)      
-        total = round(surface1[0], 2)
-        neg = round(surface1[1], 2)
-        pos = round(surface1[2], 2) 
-        #st += '    f(x): total = {}, negative = {}, positive = {}\n'.format(total, neg, pos)
-        
-        #RC1 surface
-        surface2 = self.surfaces(x, rc1)      
-        total = round(surface2[0], 2)
-        neg = round(surface2[1], 2)
-        pos = round(surface2[2], 2)
-        #st += '    RC1: total = {}, negative = {}, positive = {}\n'.format(total, neg, pos)
-
-        #RC2 surface
-        surface3 = self.surfaces(x, rc2)      
-        total = round(surface3[0], 2)
-        neg = round(surface3[1], 2)
-        pos = round(surface3[2], 2)
-        #st += '    RC2: total = {}, negative = {}, positive = {}\n'.format(total, neg, pos)
-        
-        #norm surfaces
-        #F(X) surface
-        surface1n = self.surfaces(x_n, y_n)      
-        total = round(surface1n[0], 2)
-        neg = round(surface1n[1], 2)
-        pos = round(surface1n[2], 2) 
-        #st_n += '    f(x): total = {}, negative = {}, positive = {}\n'.format(total, neg, pos)
-        
-        #RC1 surface
-        surface2n = self.surfaces(x_n, rc1_n)      
-        total = round(surface2n[0], 2)
-        neg = round(surface2n[1], 2)
-        pos = round(surface2n[2], 2)
-        #st_n += '    RC1: total = {}, negative = {}, positive = {}\n'.format(total, neg, pos)
-
-        #RC2 surface
-        surface3n = self.surfaces(x_n, rc2_n)      
-        total = round(surface3n[0], 2)
-        neg = round(surface3n[1], 2)
-        pos = round(surface3n[2], 2)
-        #st_n += '    RC2: total = {}, negative = {}, positive = {}\n'.format(total, neg, pos)
-        
-        
-        str2 += st
-        str2 += st_n
-        str2 += '  Surface comparison:\n'
-        str2 += '    f(x): graph - norm => {} - {} = {}\n'.format(round(surface1[0], 2), round(surface1n[0], 2), round(surface1[0] - surface1n[0], 2))
-        str2 += '    RC1: graph - norm => {} - {} = {}\n'.format(round(surface2[0], 2), round(surface2n[0], 2), round(surface2[0] - surface2n[0], 2))
-        str2 += '    RC2: graph - norm => {} - {} = {}\n'.format(round(surface3[0], 2), round(surface3n[0], 2), round(surface3[0] - surface3n[0], 2))
-            
-        dev = self.calculate_point_devation(graph, norm)
-        
-        str2 += '  Avg point deviation:\n'
-        str2 += '    f(x): {}\n'.format(dev[1])
-        str2 += '    RC1: {}\n'.format(dev[2])
-        str2 += '    RC2: {}\n'.format(dev[3])
-        
-        str2+= dev[0]
-            
-#        concave = str(100* round(surface_data[1] / surface_data[0], 4)) #percentage of surface < 0
- #       convex = str(100* round(surface_data[2] / surface_data[0], 4))  #percentage of surface > 0
-  #      norm_concave = str(100* round(surface_data_norm[1] / surface_data_norm[0], 4)) #percentage of surface < 0
-   #     norm_convex = str(100* round(surface_data_norm[2] / surface_data_norm[0], 4))  #percentage of surface > 0
-        
-    #    difference = abs(float(concave) - float(norm_concave))
-     #   max_difference = 10
-       # oordeel = string
-       # if difference < max_difference:
-       #     string += "--- Surface distribution: CORRECT ---\n Graph: Concave = {}%, Convex = {}%\n Norm: Concave = {}%, Convex = {}%\n Absolute difference = {}%, limit = {}%\n".format(concave, convex, norm_concave, norm_convex, difference, max_difference)
-      #  else:
-      #      string += "--- Surface distribution: INCORRECT ---\n Graph: Concave = {}%, Convex = {}%\n Norm: Concave = {}%, Convex = {}%\n  Absolute difference = {}%, limit = {}%\n".format(concave, convex, norm_concave, norm_convex, difference, max_difference)
-            
-        
-        #oordeel += str1 + str2
-        
-        #Tcreate sub functions
-        
-
-        
-        oordeel += str1 + final_str 
-        return oordeel
-    
+   
     def concept_6(self, x, y, x_n, y_n, ip, ip_n):
         previous_index = 0
         previous_index_n = 0
@@ -558,7 +243,7 @@ class Calculations:
     #Returns list of bahaviour, each element contains: ['behaviour', left x, right x]
     """Note: When detecting a transition from negative to positive RC2, the next point is taken as start of convex area. 
     No interpolation method is used to determine exact coord, this is an estimation"""
-    def find_function_behaviour(self, x_list, rc2_list, p):
+    def find_function_behaviour(self, x_list, rc2_list, p = 0):
         richting_list = []
         
         #No straight lines, looks only at concave and convex behaviour
@@ -619,104 +304,222 @@ class Calculations:
 #----------------------------------------------------
 #----------------------------------------------------
         
-    def calculate_all(self, points, titles, nr_points):
+    def calculate_all(self, drawing_data, norm_data, nr_points = 40):
+        titles = ['f(v) (Raw data)', 'f(v) (Splined)']
         data_list = []
-        
+        data_listn = []
+        feedback_list = []
         #Creates array for X and array for Y
-        temp1 = self.reduce_points(points, nr_points)
-        temp = list(zip(*temp1))
-  
-        x = temp[0]
-        y = temp[1]
+        f1 = self.reduce_points(drawing_data, nr_points)
+        f1 = list(zip(*f1))
+        x = f1[0]
+        y = f1[1]
         
-        #Checks for concept 1
-        decision = 'TRUE'
-        for i in range(len(x) - 1):
-            if x[i + 1] <= x[i]:
-                decision = 'FALSE'
-                break
-            
-        if decision == 'FALSE':
-            plt.plot(x, y, label='data', color='blue')
-            plt.show()
-            import sys
-            sys.exit(1)
+        f2 = self.reduce_points(norm_data, nr_points)
+        f2 = list(zip(*f2))
+        xn = f2[0]
+        yn = f2[1]
         
-        spline_type = 'univariate'
-            
-        if spline_type == 'univariate':
-            for i in range(len(titles)):
-                
-                #Calculate RC1 and RC2
-                #Spline XY, calculate RC1, spline RC1, calc RC2, spline RC2
-                if i == 4:
-                    s = UnivariateSpline(x, y, s = 1)
-                    ys = s(x)
-                    rc1_list = self.rc_list(x, ys)
-                    
-                    xs = x[:-1]
-                    #print('1----length rc1 = {}, xs= {}'.format(len(rc1_list), len(xs)))
-                    s = UnivariateSpline(xs, rc1_list, s = 1)
-                    ys = s(x)
-                    rc1_list = ys
-                   
-                    #print('2---length rc1 = {}, xs= {}'.format(len(rc1_list), len(xs)))
-                    rc2_list = self.rc_list(x, ys) 
-                    
-                    #print('length rc2 = {}'.format(len(rc2_list)))
-                    xs = x[:-1]
-                    s = UnivariateSpline(xs, rc2_list, s = 1)
-                    ys = s(x)
-                    rc2_list = ys
-                #Spline XY, calc RC1, spline RC1, calc RC2
-                elif i == 3:
-                    s = UnivariateSpline(x, y)
-                    ys = s(x)
-                    rc1_list = self.rc_list(x, ys)
-                    
-                    xs = x[:-1]
-                    s = UnivariateSpline(xs, rc1_list)
-                    ys = s(x)
-                    rc1_list = ys
-                    rc2_list = self.rc_list(x, ys) 
-                    
-                #Spline XY, calc RC1, calc RC2
-                elif i == 1:
-                    s = UnivariateSpline(x, y)
-                    ys = s(x)
-                    y = ys
-                    rc1_list = self.rc_list(x, ys)
-                    rc2_list = self.rc_list(x, rc1_list)      
-                #Calc XY, spline RC1, calc RC2
-                elif i == 2:
-                    rc1_list = self.rc_list(x, y)  
-                    xs = x[:-1]
-                    s = UnivariateSpline(xs, rc1_list)
-                    ys = s(x)
-                    rc1_list = ys
-                    rc2_list = self.rc_list(x, ys) 
-                elif i == 0:
-                    #Calculate RC1 and RC2 based on raw input data 
-                    rc1_list = self.rc_list(x, y)
-                    rc2_list = self.rc_list(x, rc1_list)
-                else:
-                    print('Error in method calculate.all in Thesis.py')
-                    print(i)
-                    
-                #format: [total surface, total neg serface, total pos surface]
-                xs = x[:-2]
-                temp = list(zip(xs, rc2_list))
-                surfaces_list = self.surface_list(temp)
-                 
-                #oordeel = self.beoordeel_grafiek(surfaces_list, surface_total[0])
-                
-                data = x, y, rc1_list, rc2_list, surfaces_list
+        
+        data = x, y
+        datan = xn, yn
+        for i in range(len(titles)):
+            feedback = ''
+            #Tests for concept 1, if function is invalid all other concepts dont need to be tested
+            if self.concept_1(x) == False:
+                feedback += 'Concept 1: Failed. No further testing\n'
                 data_list.append(data)
-            return data_list
+                data_listn.append(datan)
+                feedback_list.append(feedback)
+                break
+                
+            feedback += 'Concept 1: Succes\n'
+            
+            #Calculate functions for raw data
+            if i == 0:
+                rc1 = self.rc_list(x, y)
+                rc2 = self.rc_list(x, rc1)
+                
+                rc1n = self.rc_list(xn, yn)
+                rc2n = self.rc_list(xn, rc1n)
+                
+                data = x, y, rc1, rc2
+                datan = xn, yn, rc1n, rc2n
+                
+                feedback += self.test_concepts(data, datan)
+            #Calculate functions for splined f(v)
+            elif i == 1:
+                #drawing
+                s = UnivariateSpline(x, y)
+                xs = x
+                ys = s(xs)
+                rc1 = self.rc_list(xs, ys)
+                rc2 = self.rc_list(xs, rc1) 
+                data = xs, ys, rc1, rc2
+                
+                #norm
+                sn = UnivariateSpline(xn, yn)
+                xsn = xn
+                ysn = sn(xn)
+                rc1n = self.rc_list(xsn, ysn)
+                rc2n = self.rc_list(xsn, rc1n)
+                datan = xsn, ysn, rc1n, rc2n
+                
+                feedback += self.test_concepts(data, datan)
+         
+            
+            data_list.append(data)
+            data_listn.append(datan)
+            feedback_list.append(feedback)
+                
+
+
+
+            
+  
+            
+                
+            
+          
+        
+
+        
+    #Spline XY, calc RC1, calc RC2
+ 
+
+        
+
+            
+
+
+        
+
+   
+        """
+        #Calculate RC1 and RC2
+        #Spline XY, calculate RC1, spline RC1, calc RC2, spline RC2
+        elif i == 4:
+            s = UnivariateSpline(x, y, s = 1)
+            ys = s(x)
+            rc1 = self.rc_list(x, ys)
+            
+            xs = x[:-1]
+            #print('1----length rc1 = {}, xs= {}'.format(len(rc1), len(xs)))
+            s = UnivariateSpline(xs, rc1, s = 1)
+            ys = s(x)
+            rc1 = ys
+           
+            #print('2---length rc1 = {}, xs= {}'.format(len(rc1), len(xs)))
+            rc2 = self.rc_list(x, ys) 
+            
+            #print('length rc2 = {}'.format(len(rc2)))
+            xs = x[:-1]
+            s = UnivariateSpline(xs, rc2, s = 1)
+            ys = s(x)
+            rc2 = ys
+        #Spline XY, calc RC1, spline RC1, calc RC2
+        elif i == 3:
+            s = UnivariateSpline(x, y)
+            ys = s(x)
+            rc1 = self.rc_list(x, ys)
+            
+            xs = x[:-1]
+            s = UnivariateSpline(xs, rc1)
+            ys = s(x)
+            rc1 = ys
+            rc2 = self.rc_list(x, ys) 
+            
+
+        #Calc XY, spline RC1, calc RC2
+        elif i == 2:
+            rc1 = self.rc_list(x, y)  
+            xs = x[:-1]
+            s = UnivariateSpline(xs, rc1)
+            ys = s(x)
+            rc1 = ys
+            rc2 = self.rc_list(x, ys) 
+        else:
+            print('Error in method calculate.all in Thesis.py')
+            print(i)
+            """
+            
+        #format: [total surface, total neg serface, total pos surface]
+        #xs = x[:-2]
+        #temp = list(zip(xs, rc2))
+        #surfaces_list = self.surface_list(temp)
+         
+        #oordeel = self.beoordeel_grafiek(surfaces_list, surface_total[0])
+            
+
+        return data_list, data_listn, titles, feedback_list
     
 #----------------------------------------------------
 #--------- Graph Modification algorithms ------------
 #----------------------------------------------------
+        
+    def test_concepts(self, data, datan):
+        x, y, rc1, rc2 = data
+        xn, yn, rc1n, rc2n = datan
+        feedback = ''
+                
+        #Test concept 2
+        if self.concept_2(rc1) == False:
+            feedback += 'Concept 2: Failed\n'
+        else:
+            feedback += 'Concept 2: Succes\n'
+            
+        #Test concept 3
+        temp = self.concept_3(x, rc2, xn, rc2n)
+        if temp[0] == False:
+            feedback += 'Concept 3: Failed\n'
+            feedback += 'f(v): {}\n'.format(temp[1])
+            feedback += 'n(v): {}\n'.format(temp[2])
+        else:
+            feedback += 'Concept 3: Succes\n'
+            feedback += 'f(v): {}\n'.format(temp[1])
+            feedback += 'n(v): {}\n'.format(temp[2])
+        
+        return feedback
+                
+        
+    def concept_3(self, x, rc2, x_n, rc2_n, straight_lines = False):
+  
+        if straight_lines == False:
+            p = 0
+        else:
+            p = 0.025
+         
+        #Get sequance of behaviour        
+        function_behaviour = self.find_function_behaviour(x, rc2, p)
+        norm_behaviour = self.find_function_behaviour(x_n, rc2_n, p)
+        
+        if len(function_behaviour) != len(norm_behaviour):
+            return [False, function_behaviour, norm_behaviour]
+        
+        for i in range(1, len(function_behaviour)):
+            if function_behaviour[i][0] != norm_behaviour[i][0]:
+                return [False, function_behaviour, norm_behaviour]
+            
+        return [True, function_behaviour, norm_behaviour]
+                
+        
+    def concept_1(self, x):
+    #Checks for concept 1
+        for i in range(len(x) - 1):
+            if x[i + 1] <= x[i]:
+                return False
+            
+        return True
+            
+
+            
+        
+    def concept_2(self, rc1):
+        for i in range(len(rc1)):
+            if rc1[i] <= 0:
+                return False
+            
+        return True
         
     #Scale function a onto coordinates of function b
     def scale(self, a, b = None, y_scale = False):   
@@ -787,8 +590,12 @@ class Calculations:
         #Deel de data set in 50 (pas op restwaarde) 
         jumpsize = len(pixel_coords) / nr_points
         if jumpsize < 1:
-            print('error: jumpsize < 1')
-            return
+            nr_points = 40
+            jumpsize = len(pixel_coords) / nr_points
+            if jumpsize < 1:
+                print('error: jumpsize < 1')
+                return
+        
         
         counter = 0
         for i in range(nr_points):
